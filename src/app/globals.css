@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: 241 245 249;
+  --background: 3 7 18;
+}
+
+body {
+  background: #030712;
+  color: #f1f5f9;
+}
+
+/* Custom range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #1e293b;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  cursor: pointer;
+  border: 2px solid #0369a1;
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.5);
+  transition: box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.9);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  cursor: pointer;
+  border: 2px solid #0369a1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .iasv-screen-header {
+    display: none !important;
+  }
+
+  .iasv-print-page,
+  .iasv-print-main {
+    background: #ffffff !important;
+    color: #111111 !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+
+  .iasv-print-section {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    color: #111111 !important;
+    margin: 0 0 10mm 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .iasv-print-page h1,
+  .iasv-print-page h2,
+  .iasv-print-page p,
+  .iasv-print-page li,
+  .iasv-print-page th,
+  .iasv-print-page td {
+    color: #111111 !important;
+  }
+
+  .iasv-print-page table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .iasv-print-page th,
+  .iasv-print-page td {
+    border-bottom: 1px solid #d1d5db !important;
+  }
+}

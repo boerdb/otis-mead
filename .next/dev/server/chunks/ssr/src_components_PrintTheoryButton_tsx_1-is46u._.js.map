@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/DEV/Otis-mead/src/components/PrintTheoryButton.tsx"],"sourcesContent":["\"use client\";\r\n\r\nexport default function PrintTheoryButton() {\r\n  return (\r\n    <button\r\n      type=\"button\"\r\n      onClick={() => window.print()}\r\n      className=\"text-xs md:text-sm px-3 py-1.5 rounded-md border border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white transition-colors\"\r\n    >\r\n      Print deze pagina\r\n    </button>\r\n  );\r\n}\r\n"],"names":["PrintTheoryButton","type","onClick","window","print","className"],"mappings":";;;;;AAAA;;AAEe,SAASA;IACtB,qBACE,8OAAC;QACCC,MAAK;QACLC,SAAS,IAAMC,OAAOC,KAAK;QAC3BC,WAAU;kBACX;;;;;;AAIL"}}]
+}
