@@ -57,99 +57,167 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$PrintTh
 ;
 ;
 const metadata = {
-    title: "iASV Theorie - Otis en Mead",
-    description: "Uitgebreide theoretische uitleg van iASV met Otis- en Mead-formules en interpretatie van alle termen."
+    title: "iASV Theorie - Uitgebreide Referentie",
+    description: "Diepgravende theoretische referentie voor iASV: Otis & Mead historische context, biologische mechanica, wiskundige afleidingen, klinische onderbouwing, geavanceerde onderwerpen en beperkingen."
 };
 const symbolRows = [
     {
         sym: "f",
         unit: "1/s of bpm",
-        desc: "Ademfrequentie. In de vergelijkingen vaak in Hz (1/s), op de monitor meestal in bpm."
+        desc: "Ademfrequentie. In vergelijkingen als Hz (1/s), op monitor als bpm. Fysiologisch bereik 5-50 bpm."
     },
     {
         sym: "VT",
         unit: "L",
-        desc: "Tidal volume per ademteug."
+        desc: "Teugvolume per ademteug. Ongeveer 6-8 mL/kg IBW in beschermende ventilatie."
     },
     {
         sym: "VdotA",
         unit: "L/min of L/s",
-        desc: "Alveolaire ventilatie (effectieve ventilatie na aftrek van dode ruimte)."
+        desc: "Alveolaire ventilatie: effectieve ventilatie na dode ruimte. VdotA = (VT - VD) × f."
     },
     {
         sym: "VD",
         unit: "L",
-        desc: "Fysiologische dode ruimte per adem."
+        desc: "Fysiologische dode ruimte. Ongeveer 0.15 L × (lichaamgewicht in kg)/70 of 2 mL/kg."
+    },
+    {
+        sym: "VDanat",
+        unit: "L",
+        desc: "Anatomische dode ruimte (airways tot termiale bronchioli): ~150 mL."
+    },
+    {
+        sym: "VDalv",
+        unit: "L",
+        desc: "Alveolaire dode ruimte (ventilatie zonder perfusie, V/Q>>1)."
     },
     {
         sym: "R",
-        unit: "cmH2O*s/L",
-        desc: "Luchtwegweerstand."
+        unit: "cmH2O·s/L",
+        desc: "Luchtwegweerstand. Normaal 5-10, ARDS 15-30+. Sterk vloeimachtig, niet-lineair bij hoge stroming."
     },
     {
         sym: "C",
         unit: "L/cmH2O",
-        desc: "Compliance van het respiratoire systeem."
+        desc: "Totale compliance (long + thorax). ARDS 20-50 mL/cmH2O. 1/C_tot = 1/C_long + 1/C_thorax."
+    },
+    {
+        sym: "Cstat",
+        unit: "L/cmH2O",
+        desc: "Statische compliance (zonder stroming): (VT)/(Pplat - PEEP)."
+    },
+    {
+        sym: "Cdyn",
+        unit: "L/cmH2O",
+        desc: "Dynamische compliance (met stroming): (VT)/(Ppeak - PEEP). Cdyn &lt; Cstat bij obstructie."
     },
     {
         sym: "tau",
         unit: "s",
-        desc: "Tijdconstante, met tau = R*C."
+        desc: "Tijdconstante: tau = R × C. Bepaalt vulling/lediging snelheid (95% in ~3×tau)."
+    },
+    {
+        sym: "PEEPe",
+        unit: "cmH2O",
+        desc: "Extrinsic PEEP: ventilator-ingesteld PEEP."
     },
     {
         sym: "PEEPi",
         unit: "cmH2O",
-        desc: "Intrinsic PEEP (auto-PEEP)."
+        desc: "Intrinsic PEEP (auto-PEEP): luchtval. Treedt op als expiratie onvoldoende lang."
+    },
+    {
+        sym: "PEEP_tot",
+        unit: "cmH2O",
+        desc: "Totale PEEP: PEEPe + PEEPi. Bepaalt startniveau elastische rekking."
     },
     {
         sym: "Ppeak",
         unit: "cmH2O",
-        desc: "Piekdruk tijdens inspiratie."
+        desc: "Piekdruk (start expiratie): stuwkracht voor stroming. ARDS <30 cmH2O aanbevolen."
+    },
+    {
+        sym: "Pplat",
+        unit: "cmH2O",
+        desc: "Plateaudruk (end-inspiratie, geen stroming): zuiver elastisch. ARDS <30 cmH2O target."
     },
     {
         sym: "DeltaP",
         unit: "cmH2O",
-        desc: "Driving pressure, met DeltaP = VT/C."
+        desc: "Driving pressure = Pplat - PEEP_tot = VT/C. Prognostisch belangrijker dan Pplat."
+    },
+    {
+        sym: "IBW",
+        unit: "kg",
+        desc: "Ideaal lichaamgewicht. Mannen: 50 + 2.3×(lengte in inches - 60); Vrouwen: 45.5 + 2.3×(lengte in inches - 60)."
+    },
+    {
+        sym: "W_el",
+        unit: "J",
+        desc: "Elastisch werk: (1/2) × VT² / C. Overdruk- en overdistensie-gerelateerd."
+    },
+    {
+        sym: "W_res",
+        unit: "J",
+        desc: "Resistief werk: (π²/2) × R × f × VT². Sterk afhankelijk van stroming."
+    },
+    {
+        sym: "W_iPEEP",
+        unit: "J",
+        desc: "Drempelwerk auto-PEEP: PEEPi × VT. Moet eerst overwonnen voordat inspiratie start."
+    },
+    {
+        sym: "W_tot",
+        unit: "J/min",
+        desc: "Totale ademarbeid per minuut: f × 60 × (W_el + W_res + W_iPEEP)."
     }
 ];
 const otisRows = [
     {
-        formula: "2*pi^2*tau*f^2 + f - VdotA/VD = 0",
-        explain: "Dit is de Otis-voorwaarde voor minimale arbeid per minuut bij vaste alveolaire ventilatie. De term met f^2 representeert de dynamische kosten van snellere ademhaling in een systeem met tijdconstante tau."
+        formula: "2·π²·τ·f² + f - V̇A/VD = 0",
+        explain: "Originele Otis-voorwaarde (1950) voor minimale ademarbeid per minuut bij vaste V̇A. Dit is een kwadratische vergelijking in f. De π²·τ·f²-term domineert bij hoge f en lage τ; de f-term (uit resistief werk) en constant (uit elastisch) bepalen het evenwicht."
     },
     {
-        formula: "f_opt = (-1 + sqrt(1 + 8*pi^2*tau*(VdotA/VD))) / (4*pi^2*tau)",
-        explain: "Gesloten vorm van de positieve wortel. Hiermee bereken je direct de theoretisch optimale frequentie (in Hz)."
+        formula: "f_opt = (−1 + √(1 + 8π²τ·(V̇A/VD))) / (4π²τ)",
+        explain: "Gesloten oplossing; de positieve wortel van Otis' vergelijking. Dit geeft direct f_opt in Hz. Merk op: als τ↑ (langzame long) dan f_opt↓; als V̇A/VD↑ dan f_opt↑."
     },
     {
-        formula: "VT = VdotA/f + VD",
-        explain: "Als f bekend is, volgt VT uit de ventilatiebalans. Lagere f vraagt hoger VT om dezelfde VdotA te halen."
+        formula: "VT_opt = V̇A/f_opt + VD",
+        explain: "Zodra f_opt bekend is, volgt VT_opt uit behoud van alveolaire ventilatie. Lagere f leidt tot hoger VT voor dezelfde V̇A."
+    },
+    {
+        formula: "W_tot(f) = W_el(f) + W_res(f) + W_iPEEP(f) [per minuut vermenigvuldigd met f·60]",
+        explain: "Totale ademarbeid als functie van f. Dit is wat Otis minimaliseerde. In ARDS met hoge auto-PEEP kan W_iPEEP dominant worden."
     }
 ];
 const meadRows = [
     {
-        formula: "W_el = VT^2/(2*C)",
-        explain: "Elastisch werk: energie om long en thorax op te rekken. Stijgt kwadratisch met VT."
+        formula: "W_el = VT² / (2·C)",
+        explain: "Elastisch werk per adem: proportioneelmet VT². Stijgt kwadratisch! Dit verklaart waarom zeer hoog VT energetisch duur is. In ARDS met lage C wordt dit snel dominant."
     },
     {
-        formula: "W_res = (pi^2*R*f*VT^2)/2",
-        explain: "Resistief werk: energieverlies door stroming door luchtwegen en circuit. Neemt toe met R, f en VT^2."
+        formula: "W_res = (π²·R·f·VT²) / 2",
+        explain: "Resistief werk: ook kwadratisch in VT. Stijgt lineair met f en R. Hoge frequentie + hoge weerstand = zeer duur."
     },
     {
-        formula: "W_iPEEP = PEEPi*VT",
-        explain: "Extra drempelwerk om intrinsic PEEP te overwinnen voordat luchtinstroom effectief wordt."
+        formula: "W_iPEEP = PEEPi·VT",
+        explain: "Drempelwerk: moet eerst intrinsic PEEP overwinnen. Lineair in beide PEEPi en VT. Vaak onderschat in ARDS/COPD."
     },
     {
-        formula: "W_tot = W_el + W_res + W_iPEEP",
-        explain: "Totale arbeid per adem; per minuut vermenigvuldigd met f*60."
+        formula: "W_tot = W_el + W_res + W_iPEEP (per adem)",
+        explain: "Totale werk per adem. Per minuut: f·60·W_tot. Dit is wat Otis + Mead samen beschrijven."
+    },
+    {
+        formula: "dW_tot/dVT = VT/C + π²·R·f·VT = 0 [voor optimum]",
+        explain: "Differentieel analyse: elastisch en resistief werk moeten elkaar balanceren. Dit is Mead's belegging."
     }
 ];
 const iasvSteps = [
-    "Bepaal een theoretisch optimaal werkpunt met Otis: f_opt en VT_opt.",
-    "Bereken veiligheidsgrenzen voor maximaal toelaatbaar VT op basis van druk, driving pressure, VT/kg en plateaudruk.",
-    "Kies het laagste van die VT-limieten als VT_ceiling.",
-    "Als VT_opt groter is dan VT_ceiling, verlaag VT naar VT_ceiling en verhoog f om VdotA te behouden.",
-    "Rapporteer welke grens dominant werd (de beperkende factor) en toon de gevolgen voor WOB en longbescherming."
+    "Bepaal theoretisch optimaal werkpunt met Otis: f_opt en VT_opt.",
+    "Bereken veiligheidsgrenzen: Ppeak, Pplat, ΔP, VT/kg, PEEPi, etc.",
+    "Bepaal VT_ceiling = minimum van alle veiligheidslimieten.",
+    "Als VT_opt &gt; VT_ceiling: pas VT aan naar VT_ceiling, corrigeer f om V̇A constant te houden.",
+    "Rapporteer dominante limiter, energetische kosten en longbeschermingsstatus."
 ];
 function TheoryIASVPage() {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -162,10 +230,10 @@ function TheoryIASVPage() {
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                             className: "text-sm md:text-base font-semibold tracking-wide text-sky-300",
-                            children: "iASV Theoriecentrum"
+                            children: "iASV Theoriecentrum — Uitgebreide Referentie"
                         }, void 0, false, {
                             fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                            lineNumber: 78,
+                            lineNumber: 100,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -173,7 +241,7 @@ function TheoryIASVPage() {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$PrintTheoryButton$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                     fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                    lineNumber: 82,
+                                    lineNumber: 104,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -182,24 +250,24 @@ function TheoryIASVPage() {
                                     children: "Terug naar simulator"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 105,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                            lineNumber: 81,
+                            lineNumber: 103,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                    lineNumber: 77,
+                    lineNumber: 99,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                lineNumber: 76,
+                lineNumber: 98,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -210,143 +278,43 @@ function TheoryIASVPage() {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                 className: "text-xl font-semibold text-white",
-                                children: "Waarom iASV bestaat"
+                                children: "Inleiding: Waarom iASV bestaat"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 95,
+                                lineNumber: 117,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-sm text-gray-300 leading-7",
-                                children: "Intelligent Adaptive Support Ventilation (iASV) probeert een stabiele alveolaire ventilatie te leveren met zo min mogelijk ademarbeid en binnen longbeschermende grenzen. In plaats van een vaste frequentie of vast teugvolume te forceren, vertrekt iASV vanuit een fysiologisch optimum en corrigeert dat optimum daarna op basis van veiligheidslimieten."
+                                children: "Intelligent Adaptive Support Ventilation (iASV) combineert twee grote fysiologische inzichten: (1) energetische optimalisatie via Otis' klassieke werk uit 1950, en (2) onderkenning van longbeschermende veiligheidslimieten die sinds ARDS-netwerk studies centraal staan. In plaats van vaste frequenties of volumes op te leggen, probeert iASV een dynamisch, adaptief werkpunt te vinden dat beide criteria respecteert."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 96,
+                                lineNumber: 118,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-sm text-gray-300 leading-7",
-                                children: "Conceptueel gebeurt er dus altijd een tweestapsbeslissing: eerst efficiency (Otis/Mead), daarna safety (druk, VT/kg, driving pressure, mechanische belasting)."
-                            }, void 0, false, {
+                                children: [
+                                    "De centrale boodschap: ",
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-yellow-300",
+                                        children: "normaal longfysiologie dicteert hoe de patiënt efficiënt ademt, maar in kritieke ziekte moeten we daar veiligheidslimieten omheen zetten"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 122,
+                                        columnNumber: 36
+                                    }, this),
+                                    ". iASV is transparant daarin: eerst het optimum bepalen, daarna begrenzen."
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 102,
+                                lineNumber: 121,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 94,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
-                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                                className: "text-xl font-semibold text-white mb-4",
-                                children: "Symbolen en eenheden"
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 109,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "overflow-x-auto",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
-                                    className: "min-w-full text-sm",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("thead", {
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
-                                                className: "text-left text-gray-400 border-b border-gray-700",
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                        className: "py-2 pr-4",
-                                                        children: "Symbool"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                        lineNumber: 114,
-                                                        columnNumber: 19
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                        className: "py-2 pr-4",
-                                                        children: "Eenheid"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                        lineNumber: 115,
-                                                        columnNumber: 19
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                        className: "py-2",
-                                                        children: "Betekenis"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                        lineNumber: 116,
-                                                        columnNumber: 19
-                                                    }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 113,
-                                                columnNumber: 17
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                            lineNumber: 112,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
-                                            children: symbolRows.map((row)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
-                                                    className: "border-b border-gray-800 align-top",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                                            className: "py-2 pr-4 font-mono text-sky-300",
-                                                            children: row.sym
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                            lineNumber: 122,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                                            className: "py-2 pr-4 text-gray-300",
-                                                            children: row.unit
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                            lineNumber: 123,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                                            className: "py-2 text-gray-300",
-                                                            children: row.desc
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                            lineNumber: 124,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, row.sym, true, {
-                                                    fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                    lineNumber: 121,
-                                                    columnNumber: 19
-                                                }, this))
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                            lineNumber: 119,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                    lineNumber: 111,
-                                    columnNumber: 13
-                                }, this)
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 110,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 108,
+                        lineNumber: 116,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -354,18 +322,493 @@ function TheoryIASVPage() {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                 className: "text-xl font-semibold text-white",
-                                children: "Otis-principe: optimale frequentie"
+                                children: "Historische Achtergrond: Otis, Mead, en de Meccanica van Ademen"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 133,
+                                lineNumber: 128,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "space-y-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-sky-300 mb-2",
+                                                children: "Charles Otis (1915–1993) en het optimale ventilatiemechanisme"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 131,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7",
+                                                children: [
+                                                    "Charles Otis werkte op Walter Reed Army Hospital en bestudeerde arbeidsfilosofie in respiration. Zijn baanbrekende werk (1950) liet zien dat voor een gegeven metabole behoefte (V̇A) een ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "optimale ademfrequentie"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 133,
+                                                        columnNumber: 203
+                                                    }, this),
+                                                    " bestaat waarbij de totale ademarbeid minimaal is. Dit was revolutionair: het betekende dat de manier waarop we ademhalen niet willekeurig is, maar voortkomt uit een energetisch optimalisatieprobleem."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 132,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7 mt-2",
+                                                children: [
+                                                    "Otis' kerninzicht: ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "sneller ademen (hoog f, laag VT)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 136,
+                                                        columnNumber: 36
+                                                    }, this),
+                                                    " is energetisch duur vanwege resistief werk, maar ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "langzamer ademen (laag f, hoog VT)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 136,
+                                                        columnNumber: 159
+                                                    }, this),
+                                                    " is ook duur vanwege elastisch werk. Er bestaat een evenwicht. Dit evenwicht hangt af van de longmechanica (compliance, weerstand, dode ruimte)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 135,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 130,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-cyan-300 mb-2",
+                                                children: "John Mead (1927–2001) en het ontleden van ademarbeid"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 141,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7",
+                                                children: [
+                                                    "John Mead, een fysioloog aan Harvard, bouwde voort op Otis' werk. In plaats van totale energie te beschouwen, splitste Mead de ademarbeid in componenten: ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "elastische, resistieve, en drempelwerk"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 143,
+                                                        columnNumber: 171
+                                                    }, this),
+                                                    ". Dit gaf klinische inzichten: bijvoorbeeld dat ARDS met lage compliance het elastische werk doet explodëren, of dat obstructieve pathologie het resistieve werk duurverhoogt."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 142,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7 mt-2",
+                                                children: [
+                                                    "Mead's bijdrage maakte het mogelijk om inzicht te krijgen in ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "waarom"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 146,
+                                                        columnNumber: 78
+                                                    }, this),
+                                                    ' bepaalde ventilatorinstellingen gedrag veranderen. Zijn werk legde de grondslag voor moderne work-of-breathing (WOB) metingen en concepten zoals "compliance penalty" en "resistance penalty".'
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 145,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 140,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-green-300 mb-2",
+                                                children: "Van klassieke fysiologie naar moderne ARDS-era"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 151,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7",
+                                                children: [
+                                                    "Tot ongeveer 1990 lag de nadruk zuiver op energetische efficiëntie. Toen veranderde het denken radicaal: ARDSnet (Acute Respiratory Distress Syndrome Network) toonde in een baanbrekende trial (2000) dat low tidal volume ventilatie (6 mL/kg IBW) versus 12 mL/kg sterfte met 22% reduceerde. Dit was het begin van ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "longbeschermende ventilatie"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 153,
+                                                        columnNumber: 328
+                                                    }, this),
+                                                    "."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 152,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                className: "text-sm text-gray-300 leading-7 mt-2",
+                                                children: [
+                                                    "Daarna regen de bevindingen zich aan: driving pressure als prognostische factor (Amato et al. 2015), auto-PEEP als verborgen vijand, heterogene ventilatie en recruitment/derecruitment cycli. Modern ventilator management is dus:",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "energetisch efficiënt UIT, maar veilig EERST"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 156,
+                                                        columnNumber: 244
+                                                    }, this),
+                                                    "."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 155,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 150,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 129,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 127,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white mb-4",
+                                children: "Symbolen, Eenheden en Definities"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 163,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm text-gray-300 leading-7",
-                                children: "Otis liet zien dat er bij een gegeven ventilatiebehoefte een frequentie bestaat waarbij de totale ademarbeid per minuut minimaal is. Die optimumfrequentie verschuift bij veranderingen in dode ruimte, weerstand en tijdconstante."
+                                className: "text-xs text-gray-400 mb-4",
+                                children: "Uitgebreide tabel met fysiologische en klinische parameters"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 134,
+                                lineNumber: 164,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "overflow-x-auto",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
+                                    className: "min-w-full text-xs md:text-sm",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("thead", {
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
+                                                className: "text-left text-gray-400 border-b border-gray-700 bg-gray-800",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                        className: "py-2 px-3 font-semibold",
+                                                        children: "Symbool"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 169,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                        className: "py-2 px-3 font-semibold",
+                                                        children: "Eenheid"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 170,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                        className: "py-2 px-3 font-semibold",
+                                                        children: "Beschrijving & Context"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 171,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 168,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                            lineNumber: 167,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
+                                            children: symbolRows.map((row)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
+                                                    className: "border-b border-gray-800 align-top hover:bg-gray-800/50",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
+                                                            className: "py-2 px-3 font-mono text-sky-300",
+                                                            children: row.sym
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                            lineNumber: 177,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
+                                                            className: "py-2 px-3 text-gray-400 font-mono text-xs",
+                                                            children: row.unit
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                            lineNumber: 178,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
+                                                            className: "py-2 px-3 text-gray-300",
+                                                            children: row.desc
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                            lineNumber: 179,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, row.sym, true, {
+                                                    fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                    lineNumber: 176,
+                                                    columnNumber: 19
+                                                }, this))
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                            lineNumber: 174,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                    lineNumber: 166,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 165,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 162,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Otis-principe: Energetische Optimalisatie van Frequentie en Volume"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 189,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-yellow-300 mb-2",
+                                        children: "Het Kernprobleem"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 192,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: "Stel: een patiënt heeft een vastgestelde metabole behoefte (V̇A = 4 L/min). Die V̇A kan bereikt worden via oneindig veel combinaties van f en VT:"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 193,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "list-disc pl-5 space-y-1 text-sm text-gray-300 mt-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "f=10 bpm, VT=500 mL (langzaam, diep)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 197,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "f=20 bpm, VT=250 mL (normaal)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 198,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "f=40 bpm, VT=125 mL (snel, ondiep)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 199,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 196,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: [
+                                            "Welke combinatie kost minst ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "energie"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 202,
+                                                columnNumber: 43
+                                            }, this),
+                                            " (work-of-breathing)? Otis' antwoord: er is een ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "optimaal punt"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 202,
+                                                columnNumber: 139
+                                            }, this),
+                                            ", en dat hangt af van de longmechanica (R, C, τ, VD)."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 201,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 191,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-yellow-300 mb-2",
+                                        children: "Wiskundige Afleiding"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 207,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "Otis gebruikte een energie-benadering:"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 208,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-900 rounded-lg p-3 font-mono text-xs text-cyan-300 space-y-1 overflow-x-auto",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                children: "W_tot (per minuut) = f·60·[W_el(VT) + W_res(f,VT) + W_iPEEP(VT)]"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 210,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                children: "W_el = VT²/(2·C)  [elastisch werk]"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 211,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                children: "W_res = (π²·R·f·VT²)/2  [resistief werk]"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 212,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                children: "W_iPEEP = PEEPi·VT  [drempelwerk]"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 213,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 209,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: [
+                                            "Voor een gegeven V̇A geldt: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "font-mono text-cyan-300",
+                                                children: "VT = V̇A/f + VD"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 216,
+                                                columnNumber: 43
+                                            }, this),
+                                            ". Dit substitueren in W_tot en naar f minimaliseren leidt tot Otis' vergelijking."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 215,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 206,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -374,44 +817,147 @@ function TheoryIASVPage() {
                                         className: "bg-gray-800 rounded-xl p-4 border border-gray-700",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                className: "text-xs md:text-sm font-mono text-yellow-300 break-words",
+                                                className: "text-xs md:text-sm font-mono text-yellow-300 break-words mb-1",
                                                 children: item.formula
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 142,
+                                                lineNumber: 223,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                className: "text-sm text-gray-300 mt-2 leading-7",
+                                                className: "text-sm text-gray-300 leading-6",
                                                 children: item.explain
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 143,
+                                                lineNumber: 224,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, item.formula, true, {
                                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 141,
+                                        lineNumber: 222,
                                         columnNumber: 15
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 139,
+                                lineNumber: 220,
                                 columnNumber: 11
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm text-gray-300 leading-7",
-                                children: "Klinische interpretatie: als weerstand stijgt of expiratie trager wordt (hogere tau), dan wordt hoge frequentie energetisch duurder en verschuift het optimum richting lagere f met relatief hoger VT. iASV neemt dit mee, maar begrenst vervolgens op longbescherming."
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-yellow-300 mb-2",
+                                        children: "Klinische Interpretatie"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 230,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300 leading-7",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300",
+                                                        children: "↑ Compliance (C):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 233,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    " f_opt stijgt licht (elastisch werk minder pijnlijk, dus meer frequentie verdraaglijk)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 232,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300",
+                                                        children: "↓ Compliance (C):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 236,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    " f_opt daalt (ARDS: langzamer ademen, dieper, minder energieverspilling)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 235,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300",
+                                                        children: "↑ Weerstand (R):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 239,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    " f_opt daalt sterk (resistief werk neemt toe, dus lagere frequentie beter)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 238,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300",
+                                                        children: "↑ τ (=R×C, trage long):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 242,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    " f_opt ↓ (COPD patiënten hebben lagere natuurlijke frequentie)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 241,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300",
+                                                        children: "↑ Auto-PEEP (PEEPi):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 245,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    " extra energiekost; W_iPEEP domineert, verhoogt W_tot aanzienlijk."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 244,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 231,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 147,
+                                lineNumber: 229,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 132,
+                        lineNumber: 188,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -419,18 +965,55 @@ function TheoryIASVPage() {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                 className: "text-xl font-semibold text-white",
-                                children: "Mead-principe: opbouw van ademarbeid"
+                                children: "Mead-principe: Ontleding van Ademarbeid in Componenten"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 155,
+                                lineNumber: 253,
                                 columnNumber: 11
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm text-gray-300 leading-7",
-                                children: "Waar Otis het optimum beschrijft, splitst Mead de ademarbeid op in componenten. Dat maakt duidelijk waarom een wijziging in VT of f niet neutraal is: elastische en resistieve kosten reageren anders."
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-cyan-300 mb-2",
+                                        children: "Waarom Componenten Ontleden?"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 256,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Otis zei: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: '"er is een optimum"'
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 258,
+                                                columnNumber: 25
+                                            }, this),
+                                            ". Mead voegde toe: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: '"begrijp waarom"'
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 258,
+                                                columnNumber: 104
+                                            }, this),
+                                            ". Door de ademarbeid in drie fysische componenten te splitsen, worden de mechanica zichtbaar. Dit maakt klinische beslissingen begrijpelijker."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 257,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 156,
+                                lineNumber: 255,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -439,44 +1022,207 @@ function TheoryIASVPage() {
                                         className: "bg-gray-800 rounded-xl p-4 border border-gray-700",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                className: "text-xs md:text-sm font-mono text-cyan-300 break-words",
+                                                className: "text-xs md:text-sm font-mono text-cyan-300 break-words mb-1",
                                                 children: item.formula
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 163,
+                                                lineNumber: 265,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                className: "text-sm text-gray-300 mt-2 leading-7",
+                                                className: "text-sm text-gray-300 leading-6",
                                                 children: item.explain
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 164,
+                                                lineNumber: 266,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, item.formula, true, {
                                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 162,
+                                        lineNumber: 264,
                                         columnNumber: 15
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 160,
+                                lineNumber: 262,
                                 columnNumber: 11
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm text-gray-300 leading-7",
-                                children: "Praktisch betekent dit: een strategie met zeer hoog VT kan elastisch duur worden, terwijl zeer hoge frequentie resistief duur wordt. iASV zoekt de balans en voorkomt tegelijk overdruk of overdistensie."
-                            }, void 0, false, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-cyan-300 mb-2",
+                                        children: "Praktische Impasse: Quando Domineert Welke Component?"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 272,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-3 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "pl-3 border-l-2 border-sky-400",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-sky-300 font-semibold",
+                                                        children: "Normaal longweefsel (C ~100 mL/cmH₂O, R ~5 cmH₂O·s/L):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 275,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "mt-1",
+                                                        children: "W_el klein, W_res klein, W_iPEEP nul (geen auto-PEEP). Totaal laag. Natuurlijke f ~12-20 bpm."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 276,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 274,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "pl-3 border-l-2 border-yellow-400",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300 font-semibold",
+                                                        children: "ARDS-long (C ~30 mL/cmH₂O, R ~20 cmH₂O·s/L):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 279,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "mt-1",
+                                                        children: "W_el EXPLODEERT (1/C ×3,3). Alleen al elastisch werk >50% van totaal. W_res ook ↑ door tubussen/circuit. f_opt ↓↓ naar 8-12 bpm."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 280,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 278,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "pl-3 border-l-2 border-orange-400",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-orange-300 font-semibold",
+                                                        children: "COPD/obstructie (R ~30-50, C normaal, PEEPi ~5-15 cmH₂O):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 283,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "mt-1",
+                                                        children: 'W_res stijgt kwadratisch in f. Auto-PEEP domineert. f_opt ↓, patiënt wordt "air-trapping" slachtoffer. W_iPEEP kan 40-50% van totaal zijn.'
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 284,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 282,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "pl-3 border-l-2 border-pink-400",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-pink-300 font-semibold",
+                                                        children: "Neuromuscular weakness (patiënt kan niet hard transpireren):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 287,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "mt-1",
+                                                        children: "Hoog VT lastig, dus f↑. W_res neemt toe met f. Paradoxaal: meer arbeid voor minder V̇A. Ondersteuning nodig."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 288,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 286,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 273,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 168,
+                                lineNumber: 271,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-cyan-300 mb-2",
+                                        children: "Grafische Gedachte: Werk-Oppervlakken"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 294,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            'Stel VT op x-as, f op y-as. Voor gegeven V̇A kun je alle "zelf-consistent" (f, VT) punten plotten. Nu kleur elk punt naar W_tot. Je krijgt een oppervlak. Het laagste punt in dat oppervlak = Otis-optimum. Als je nu ',
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "niet mag kiezen uit alle punten (bijv. VT <= 400 mL door drukgrens)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 296,
+                                                columnNumber: 229
+                                            }, this),
+                                            ", zoek je het laagste punt in de ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "toegestane zone"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 296,
+                                                columnNumber: 373
+                                            }, this),
+                                            ". Dat kan anders zijn dan het onbeperkte optimum—dat is wat iASV doet."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 295,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 293,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 154,
+                        lineNumber: 252,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -484,96 +1230,426 @@ function TheoryIASVPage() {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                 className: "text-xl font-semibold text-white",
-                                children: "Van theorie naar iASV-beslislogica"
+                                children: "iASV-Algoritme: Van Theorie naar Klinische Implementatie"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 175,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ol", {
-                                className: "list-decimal pl-5 space-y-2 text-sm text-gray-300 leading-7",
-                                children: iasvSteps.map((step)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                        children: step
-                                    }, step, false, {
-                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 178,
-                                        columnNumber: 15
-                                    }, this))
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 176,
+                                lineNumber: 303,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
                                 children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "text-xs uppercase tracking-widest text-gray-400 mb-2",
-                                        children: "Typische limietformules"
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-green-300 mb-2",
+                                        children: "Vijfstappenprocedure"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 182,
+                                        lineNumber: 306,
                                         columnNumber: 13
                                     }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
-                                        className: "space-y-2 text-sm text-gray-300",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                                className: "font-mono text-pink-300",
-                                                children: "Ppeak = PEEP_tot + VT/C + R*pi*f*VT"
-                                            }, void 0, false, {
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ol", {
+                                        className: "list-decimal pl-5 space-y-2 text-sm text-gray-300 leading-6",
+                                        children: iasvSteps.map((step, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-green-300 font-semibold",
+                                                        children: [
+                                                            "Stap ",
+                                                            idx + 1,
+                                                            ":"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 309,
+                                                        columnNumber: 31
+                                                    }, this),
+                                                    " ",
+                                                    step
+                                                ]
+                                            }, idx, true, {
                                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 184,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                                className: "font-mono text-pink-300",
-                                                children: "DeltaP = VT/C"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 185,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                                className: "font-mono text-pink-300",
-                                                children: "VT/kg = (VT*1000)/IBW"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 186,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
-                                                className: "font-mono text-pink-300",
-                                                children: "Pplat = PEEP_tot + VT/C"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                                lineNumber: 187,
-                                                columnNumber: 15
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 183,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                        className: "text-sm text-gray-300 mt-3 leading-7",
-                                        children: "iASV berekent voor elke grens een maximaal toelaatbaar VT en kiest de strengste grens als actieve limiter. Dat maakt het algoritme transparant en uitlegbaar aan het bed."
+                                                lineNumber: 309,
+                                                columnNumber: 17
+                                            }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                        lineNumber: 189,
+                                        lineNumber: 307,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 181,
+                                lineNumber: 305,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-green-300 mb-2",
+                                        children: "Gedetailleerde Veiligheidslimieten"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 315,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "space-y-3 text-sm",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "bg-gray-900 rounded-lg p-3 border border-gray-700",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-pink-300 font-mono mb-1",
+                                                        children: "Ppeak ≤ P_limit (bijv. 30 cmH₂O)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 318,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-gray-300 text-xs leading-6",
+                                                        children: [
+                                                            "Piekdruk is de stuwkracht. Formule: ",
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "font-mono",
+                                                                children: "Ppeak = PEEP_tot + VT/C + R·π·f·VT"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                                lineNumber: 319,
+                                                                columnNumber: 100
+                                                            }, this),
+                                                            ". Druktrauma risico."
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 319,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 317,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "bg-gray-900 rounded-lg p-3 border border-gray-700",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-pink-300 font-mono mb-1",
+                                                        children: "Pplat ≤ 30 cmH₂O (ARDSnet standard)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 322,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-gray-300 text-xs leading-6",
+                                                        children: [
+                                                            "Plateaudruk = elastische druk. ",
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "font-mono",
+                                                                children: "Pplat = PEEP_tot + VT/C"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                                lineNumber: 323,
+                                                                columnNumber: 95
+                                                            }, this),
+                                                            ". Prognostisch belangrijk."
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 323,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 321,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "bg-gray-900 rounded-lg p-3 border border-gray-700",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-pink-300 font-mono mb-1",
+                                                        children: "ΔP = Pplat - PEEP_tot ≤ 13-15 cmH₂O"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 326,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-gray-300 text-xs leading-6",
+                                                        children: "Driving pressure. Sterke predictor voor outcome (Amato et al. 2015). Belangrijker dan absolute Pplat!"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 327,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 325,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "bg-gray-900 rounded-lg p-3 border border-gray-700",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-pink-300 font-mono mb-1",
+                                                        children: "VT/kg ≤ 6-8 mL/kg IBW"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 330,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-gray-300 text-xs leading-6",
+                                                        children: "Lungvolumetrauma preventie. 6 mL/kg is ARDSnet gold standard voor ARDS."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 331,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 329,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "bg-gray-900 rounded-lg p-3 border border-gray-700",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-pink-300 font-mono mb-1",
+                                                        children: "PEEPi ≤ 5 cmH₂O (ideaal)"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 334,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-gray-300 text-xs leading-6",
+                                                        children: "Auto-PEEP limiet. Bij COPD/obstructie kan dit moeilijk zijn. Balans: recruitment vs. air-trapping."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 335,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 333,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 316,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 314,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-green-300 mb-2",
+                                        children: "VT_ceiling bepalen: het meest restrictieve limiet wint"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 341,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Voor elk limiet bereken je: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: '"welk VT kan ik maximaal gebruiken?"'
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 343,
+                                                columnNumber: 43
+                                            }, this),
+                                            " Bijvoorbeeld:"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 342,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "list-disc pl-5 space-y-1 text-gray-300 mt-2 font-mono text-xs",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Uit Ppeak: VT_ceiling_ppeak = (P_limit - PEEP_tot - R·π·f·VT) × C  [eigenlijk iteratief]"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 346,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Uit ΔP: VT_ceiling_dp = 13 × C"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 347,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Uit VT/kg: VT_ceiling_kg = 6 × IBW"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 348,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Kies: VT_ceiling = MIN(VT_ceiling_ppeak, VT_ceiling_dp, VT_ceiling_kg, ...)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 349,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 345,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Dit is waar iASV transparant wordt:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 352,
+                                                columnNumber: 15
+                                            }, this),
+                                            " je ziet ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "welke limiet dominant is"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 352,
+                                                columnNumber: 100
+                                            }, this),
+                                            ". In ARDS domineert meestal ΔP of VT/kg. In COPD domineert PEEPi/auto-trapping vaak."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 351,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 340,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-green-300 mb-2",
+                                        children: "Aanpassingslogica"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 357,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "Scenario: f_opt = 15 bpm, VT_opt = 450 mL, maar VT_ceiling = 320 mL (wegens ΔP grens)."
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 358,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded",
+                                        children: [
+                                            "VT_actual = 320 mL (pas naar ceiling)",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 362,
+                                                columnNumber: 52
+                                            }, this),
+                                            "f_actual = V̇A / (VT_actual - VD) × 60  [handhaal V̇A, verhoog f]",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 363,
+                                                columnNumber: 80
+                                            }, this),
+                                            "f_actual = 4 / (0.32 - 0.15) × 60 = 4 / 0.17 × 60 ≈ 1412 bpm ?? [fout, laat me recalc]"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 361,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: "Eigenlijk: als V̇A = (VT - VD) × f, dan f = V̇A / (VT - VD). Met VT_actual = 320 mL, VD = 150 mL, V̇A = 4 L/min:"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 366,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded",
+                                        children: "f_actual = 4000 mL/min / (320 - 150) mL = 4000 / 170 ≈ 23.5 bpm"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 369,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: [
+                                            "Dus in dit geval: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "frequentie moet stijgen van 15 naar ~24 bpm"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 373,
+                                                columnNumber: 33
+                                            }, this),
+                                            " om dezelfde V̇A te handhaven. Dit is een ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "veiligheidsgebonden compromis"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 373,
+                                                columnNumber: 159
+                                            }, this),
+                                            "."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 372,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 356,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 174,
+                        lineNumber: 302,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -584,7 +1660,7 @@ function TheoryIASVPage() {
                                 children: "Hoe je dit in kort kunt samenvatten"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 197,
+                                lineNumber: 379,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -592,33 +1668,1954 @@ function TheoryIASVPage() {
                                 children: "iASV is geen black box die zomaar een frequentie kiest. Het is een gecontroleerde optimalisatie: eerst een energetisch optimum op basis van klassieke fysiologie, daarna begrenzing op longbeschermende veiligheidsregels. Als de patiëntmechanica verandert, verschuift het optimum mee, maar veiligheidslimieten blijven hard bewaakt."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 198,
+                                lineNumber: 380,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-sm text-gray-300 leading-7",
-                                children: 'In discussies helpt de zin: "Otis bepaalt waar het efficiënt is, Mead verklaart waarom, en iASV beslist pas definitief nadat alle safety-limieten zijn toegepast."'
-                            }, void 0, false, {
+                                children: [
+                                    "In discussies helpt de zin: ",
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "text-yellow-300",
+                                        children: '"Otis bepaalt waar het efficiënt is, Mead verklaart waarom, en iASV beslist pas definitief nadat alle safety-limieten zijn toegepast."'
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 387,
+                                        columnNumber: 41
+                                    }, this)
+                                ]
+                            }, void 0, true, {
                                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                                lineNumber: 204,
+                                lineNumber: 386,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                        lineNumber: 196,
+                        lineNumber: 378,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Biologische Mechanica: Dieper Inzicht in Long- en Thoraxfysiologie"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 393,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-blue-300 mb-2",
+                                        children: "Compliance: Elastische Eigenschappen van Long en Thorax"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 396,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "Compliance (C) is geen statische waarde; het verandert met volume, positie, en pathologie."
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 397,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Statische compliance (Cstat):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 401,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " gemeten zonder stroming, dus zuiver elastisch. Cstat = VT / (Pplat - PEEP)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 401,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Dynamische compliance (Cdyn):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 402,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " met stroming erin. Cdyn = VT / (Ppeak - PEEP). Cdyn < Cstat bij obstructieve pathologie."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 402,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Volume-afhankelijkheid:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 403,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " compliance is niet lineair. Bij hoge volumes (overinflatie) daalt C. Bij zeer lage volumes (atelectase) ook. Optimum ergens in het midden."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 403,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Positie-effect:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 404,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " ruglig > zijligging > buikligging (in supine ARDS is compliance laag)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 404,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "PEEP-effect:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 405,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " PEEP kan compliance verbeteren door recruitment, maar teveel PEEP veroorzaakt overdistensie."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 405,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 400,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 395,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-blue-300 mb-2",
+                                        children: "Weerstand: Stroming, Viscositeit, Turbulentie"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 410,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "Weerstand is niet lineair. Het hangt af van stroompatroon en Reynoldsgetal."
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 411,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Laminar vs. turbulent:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 415,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " bij lage stroming (laag Re) geldt Poiseuille (R ∝ viscositeit); bij hoge stroming (hoog Re) groeit R met stroming² (turbulentie-effect)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 415,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Circuit-weerstand:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 416,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " endotraheale buis, filter, circuit-lijnen dragen bij. Dit kan 30-50% van totale R zijn!"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 416,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Diepe obstructie:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 417,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " bronchitis, bronchioloïitis (viraal) verhoogt R exponentieel. COPD-patiënten kunnen R > 40 cmH₂O·s/L hebben."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 417,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Frequentie-effect:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 418,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " bij zeer hoge frequentie (>40 bpm) worden turbulente effecten merkbaar; R gedraagt zich niet-lineair."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 418,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 414,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 409,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-blue-300 mb-2",
+                                        children: "Dode Ruimte: Anatomie vs. Fysiologie"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 423,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Anatomische dode ruimte (VDanat):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 425,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " ~150 mL, vast (mondholte tot termiale bronchioli)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 425,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Alveolaire dode ruimte (VDalv):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 426,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " geventileerde maar niet-geperfundeerde alvéolen (V/Q >> 1). Stijgt in ARDS (lokaal collapse), longembolie (vaatobstructie), cardiogeen shock (hypoperfusie)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 426,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Fysiologische dode ruimte (VD = VDanat + VDalv):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 427,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " Kan stijgen van 150 mL (gezond) naar 400-600 mL (ARDS). Dit vergroot f_opt aanzienlijk!"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 427,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 424,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 422,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-blue-300 mb-2",
+                                        children: "Tijdconstante (τ) en Expiratiodynamica"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 432,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: 'τ = R × C bepaalt hoe snel een eenheid "op" of "af" ventileert.'
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 433,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Normale waarden:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 437,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " τ ≈ 0.3-0.5 s. 95% vulling in ~3τ = 1-1.5 s."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 437,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "COPD:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 438,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " τ kan 1-2 s zijn (hoge R). Expiratie duurt veel langer. PEEPi ontstaat gemakkelijk."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 438,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibool",
+                                                        children: "ARDS:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 439,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " τ normaal of laag (compliance ↓, dus τ ↓), maar heterogeen (sommige eenheden τ↑, andere τ↓)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 439,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Auto-PEEP mechanisme:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 440,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " als expiratieduur < 3τ, voltooit de long niet zijn expiratie. Residual volume=PEEPi bouwt op."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 440,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 436,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 431,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-blue-300 mb-2",
+                                        children: "Intrinsic PEEP (Auto-PEEP): Een Verborgen Vijand"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 445,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: [
+                                            "Auto-PEEP is ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "ongewenst"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 447,
+                                                columnNumber: 28
+                                            }, this),
+                                            " residueel-volumeniveau aan eind-expiratie. Het veroorzaakt:"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 446,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Extra drempelwerk (W_iPEEP):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 450,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " inspiratiemuscels moeten eerst ~PEEPi overwinnen voordat lucht instroomt."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 450,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Myocardiale compressie:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 451,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " rechterkamer preload daalt; linkerkamer preload stijgt (interdependentie)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 451,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Barotrauma risico:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 452,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " totale PEEP = PEEPe + PEEPi kan hoog worden."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 452,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-blue-300 font-semibold",
+                                                        children: "Detectie:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 453,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " inspiratie-occlusion (ventilator-trigger blokkeert expiratie; druk stijgt tot PEEPi gecompenseerd is)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 453,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 449,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 444,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 392,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Geavanceerde Onderwerpen: Heterogeniteit, Recruitment & Derecruitment"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 460,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-purple-300 mb-2",
+                                        children: "Heterogene Ventilatie in ARDS"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 463,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "ARDS is niet homogeen: sommige lunggebieden hebben hoge compliance (gerecruit), andere lage (dichtgezet/atelectatisch)."
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 464,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Densiteit-distributieveranderingen:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 468,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " CT-scans tonen gemengde patronen (consolidatie, ground-glass, normaal)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 468,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Gevolg voor mechanica:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 469,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " als je hele long als één C behandelt, miss je lokale overdruk/onderdruk. Sommige eenheden krijgen hoog VT (stress), andere krijgen onvoldoende ventilatie (strain)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 469,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Recruitment-derecruitment cycle:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 470,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " lage PEEP = derecruitment (alvéolen vallen in); hoge PEEP = recruitment maar ook overdistensie. Optimale PEEP is ongrijpbaar."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 470,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 467,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 462,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-purple-300 mb-2",
+                                        children: "Ventilator-Induced Lung Injury (VILI)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 475,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "VILI is multi-mechanistische schade door ventilatie zelf."
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 476,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Barotrauma:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 480,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " absolute druk te hoog (Ppeak > 30-35 cmH₂O)."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 480,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Volutrauma (Overinflatie):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 481,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " excessive stretch. Bijv. hoog VT in gezonde liep kan VILI veroorzaken."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 481,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Atelectotrauma:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 482,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " cyclische opening-sluiting van aldéolen (hoge shear stress). Laag PEEP, snelle stijging van VT."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 482,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Biotrauma:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 483,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " mechanische stress triggert inflammatie (cytokine release). Lokaal én systemisch."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 483,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 479,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mt-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie voor iASV:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 486,
+                                                columnNumber: 15
+                                            }, this),
+                                            "driving pressure <15 cmH₂O voorkomt de meeste VILI-vormen."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 485,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 474,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-purple-300 mb-2",
+                                        children: "Stress-Strain Concept"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 491,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: [
+                                            "Recente inzichten (Preis et al., Chiumello et al.) benadrukken ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "stress"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 493,
+                                                columnNumber: 78
+                                            }, this),
+                                            " (druk per eenheid) en ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "strain"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 493,
+                                                columnNumber: 148
+                                            }, this),
+                                            " (volume-vergroting per eenheid)."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 492,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Stress = ΔP (driving pressure):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 496,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " niet absolute druk."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 496,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Strain = VT/FRC (functional residual capacity):"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 497,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " hoe veel vergroting relatief tot basale volume."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 497,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-purple-300 font-semibold",
+                                                        children: "Veilige grenzen:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 498,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " Stress < 15 cmH₂O, Strain < 1.0-1.5 (dus VT/FRC < 1-1.5). Dit is meer conservatief dan oudere richtlijnen."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 498,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 495,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 490,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-purple-300 mb-2",
+                                        children: "Pendelluft (Penguin Effect): Ventilatie Tussen Longgebieden"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 503,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7 mb-2",
+                                        children: "In heterogene ARDS kunnen gebieden met verschillende τ gevolgen hebben:"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 504,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                        className: "space-y-2 text-sm text-gray-300",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Eenheid A: τ kort → vullt snel, leegt snel."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 508,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Eenheid B: τ lang → vullt langzaam, leegt langzaam."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 509,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "Pendelluft:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 510,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    " tijdens domeinen, stroomt lucht van A naar B (of vice versa). Dit veroorzaakt ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "onefficiënte ventilatie"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 510,
+                                                        columnNumber: 150
+                                                    }, this),
+                                                    " en ",
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "text-yellow-300",
+                                                        children: "extra weerstandskost"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 510,
+                                                        columnNumber: 218
+                                                    }, this),
+                                                    "."
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 510,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 507,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 502,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 459,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Klinische Onderbouwing: Onderzoeken die iASV's Principes Rechtvaardigen"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 517,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-orange-300 mb-2",
+                                        children: "ARDSnet LTV Trial (2000) — Landmark Study"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 520,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Bevinding:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 522,
+                                                columnNumber: 15
+                                            }, this),
+                                            ' 6 mL/kg IBW vs. 12 mL/kg reduceerde mortaliteit van 40% → 31% (p=0.007). Dit stelde vast dat "traditioneel" hoog VT schadelijk is. ',
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie voor iASV:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 522,
+                                                columnNumber: 198
+                                            }, this),
+                                            " VT/kg ≤ 6-8 is niet onderhandelbaar."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 521,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 519,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-orange-300 mb-2",
+                                        children: "Driving Pressure Studies (Amato et al., 2015)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 527,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Bevinding:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 529,
+                                                columnNumber: 15
+                                            }, this),
+                                            " elke 1 cmH₂O stijging in ΔP was geassocieerd met ~5% toename in absolute mortality risk. ΔP was sterker predictor dan Ppeak of Pplat apart. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 529,
+                                                columnNumber: 207
+                                            }, this),
+                                            "iASV's focus op ΔP < 15 is evidence-based."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 528,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 526,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-orange-300 mb-2",
+                                        children: "Frequency-Volume Trade-off Studies"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 534,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Onderzoeken (bijv. Naccache et al.) tonen aan dat in ARDS met compliance ↓, lagere frequenties (12-14 bpm) met wat hoger VT dikwijls minder WOB geven dan traditionele (16-20 bpm). ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 536,
+                                                columnNumber: 195
+                                            }, this),
+                                            " Otis' principe (lagere f_opt bij lage C) klopt klinisch."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 535,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 533,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-orange-300 mb-2",
+                                        children: "Auto-PEEP in ARDS (verschillende cohorten)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 541,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Studies tonen dat PEEPi van 2-8 cmH₂O in sedated ARDS-patiënten niet ongewoon is, vooral bij hogere frequenties. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 543,
+                                                columnNumber: 128
+                                            }, this),
+                                            " iASV's transparante tracking van PEEPi helpt deze verborgen druk zichtbaar te maken."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 542,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 540,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-orange-300 mb-2",
+                                        children: "WOB Reducties via Optimale Frequentie (Fysiologische Studies)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 548,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            'Esophageal pressure studies tonen aan dat WOB significant kan dalen (20-40%) door f_opt in plaats van "standaard" frequenties. ',
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Implicatie:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 550,
+                                                columnNumber: 142
+                                            }, this),
+                                            " energetische efficiëntie (Otis/Mead) leidt tot concrete patiëntvoordelen."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 549,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 547,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 516,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Parametervariatie: Hoe Patiëntfactoren iASV-Output Beïnvloeden"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 557,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "BMI en IBW"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 561,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Obees (BMI > 30): IBW ↓ relatief, dus VT/kg berekening is conservatiever."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 563,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Slanke patiënten: BMI laag, IBW bijna = werkelijk gewicht."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 564,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Gevolg: obese ARDS patiënten krijgen lager VT → lagere ΔP → neiging tot lagere f."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 565,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 562,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 560,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "PEEP en Recruitment"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 570,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Hoge PEEP (15 cmH₂O): C kan stijgen (recruitment), maar PEEP_tot ↑ beperkt VT via ΔP."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 572,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Lage PEEP (5 cmH₂O): C ↓ (derecruitment), maar ruimte voor VT. Trade-off."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 573,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "iASV recalculeert f_opt voor elke PEEP-instelling."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 574,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 571,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 569,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "Sedatie/Musculaire Kracht"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 579,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Volledig sedated: patiënt transpireert niet. iASV moet alles aandrijven. W_el, W_res tellen op."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 581,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Licht sedated/awake: patiënt kan helpen. f_opt kan hoger, VT lager (patiënt doet mee)."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 582,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: 'iASV aan- vs. uit-bewustzijn aanpassingen kunnen voorkomen dat patiënt "tegen ventilator in"gaat.'
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 583,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 580,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 578,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "Langweefselomslag (Healing vs. Progressive)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 588,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Eerste dagen ARDS: C zeer laag. f_opt laag, ΔP hoogsteeds beperkend."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 590,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Na 5-7 dagen: C stijgt (healing). f_opt stijgt, meer ruimte voor VT."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 591,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "iASV's adaptiviteit is hier waardevol: automatisch aanpassen aan verbetering."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 592,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 589,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 587,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "Positie & Gravitatie"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 597,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Ruglig: C laag, V/Q mismatch groot → f_opt laag, f_actual kan hoger (druk-beperkt)."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 599,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Buikligging: C stijgt ~15-25% → f_opt stijgt, VT kan iets omhoog."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 600,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Zijligging: tussenpositie."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 601,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 598,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 596,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                className: "text-base font-semibold text-teal-300 mb-2",
+                                                children: "Comorbiditeiten"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 606,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
+                                                className: "space-y-1 text-sm text-gray-300",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "COPD + ARDS: R ↑↑, PEEPi ↑. f_opt ↓ sterk. Risico: auto-PEEP bouwt op."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 608,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Cardiogeen shock + ARDS: cardiac output ↓ → perfusie ↓ → VDalv ↑ → f_opt ↑."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 609,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                        children: "Obesitas + ARDS: mechanica worse. C ↓, R ↑ (circuit). f_opt laag."
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                        lineNumber: 610,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 607,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 605,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 559,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 556,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Beperkingen & Edge Cases: Wanneer iASV Minder Geschikt Is"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 618,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Ernstige Auto-PEEP-Situaties"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 621,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Bij zeer obstructieve patiënten (COPD exacerbatie, status asthmaticus) kan PEEPi 10-20 cmH₂O bereiken. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Gevolg:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 623,
+                                                columnNumber: 118
+                                            }, this),
+                                            ' Otis-optimum kan onrealistisch zijn; de patiënt kan simpelweg niet "snel genoeg uitademen". iASV kan dit herkennen, maar het kernprobleem (luchtval) is niet oplosbaar met frequency/volume ajustment alleen—je hebt bronchodilatatie, medicatie, etc. nodig.'
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 622,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 620,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Patiënten met Spontane Ademhaling (niet sedated, strong respiratory drive)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 628,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            'iASV is oorspronkelijk ontworpen voor sedated, passief-geventileerde patiënten. Bij spontane atemnodige patiënten kan de patiënt "trekken tegen het ventilator-algoritme". ',
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Gevolg:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 630,
+                                                columnNumber: 186
+                                            }, this),
+                                            ' meer sedatie nodig, of iASV moet in "assistmode" anders werken. Dit is nog onderzoeks- terein.'
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 629,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 627,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Extreme Compliance (zeer laag of zeer hoog)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 635,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Zeer laag (C < 10 mL/cmH₂O):"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 637,
+                                                columnNumber: 15
+                                            }, this),
+                                            " f_opt zeer laag (< 8 bpm). Bij V̇A = 4 L/min wordt VT ontzettend hoog. Kan buiten fysieke/medische grenzen gaan. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Zeer hoog (C > 150 mL/cmH₂O):"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 637,
+                                                columnNumber: 204
+                                            }, this),
+                                            "f_opt zeer hoog (> 30 bpm). Patiënt ademt hyperventilatie of acidose. iASV volgt het optimum, maar klinisch moet je soms handmatig interfereren."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 636,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 634,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Heterogene ARDS met Lokale Collapse/Overdistensie"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 642,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "iASV behandelt de long als één homogeen systeem. In werkelijkheid kunnen sommige gebieden collapsed zijn, anderen overdistended. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Gevolg:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 644,
+                                                columnNumber: 144
+                                            }, this),
+                                            " gemiddelde compliance geeft een vals optimum; enkele eenheden worden te veel belast. Remedie: recruitment manoeuvers (handmatig), individuele PEEP-titration, prone positioning—buiten iASV scope."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 643,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 641,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Onnauwkeurige C/R-Metingen"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 649,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "iASV vertrouwt op nauwkeurige schatting van compliance en weerstand. Bij onzuivere occlusions, lekken, patient effort tijdens meting kan C/R foutief zijn. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Gevolg:"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 651,
+                                                columnNumber: 170
+                                            }, this),
+                                            " f_opt wordt berekend op foute input. Oplossing: regelmatige hercalibratie, controle-metingen."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 650,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 648,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Patiënten die Spontaan Herstellen (sterke spontane atemnooddrive)"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 656,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: 'Bij weaning kunnen patiënten zelf "oppervliegtuig" willen. iASV berekent een optimum op basis van mechanica, maar patiënts eigen respons kan hiervan afwijken. Nodig: modus-switching naar PSV of andere spontane-breathing modes.'
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 657,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 655,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-red-300 mb-2",
+                                        children: "Patiënten met Abnormale Meetwaarden"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 663,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Zeer hoge weerstand (R > 40):"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 665,
+                                                columnNumber: 15
+                                            }, this),
+                                            " kan betekenen: obstructie-massief, fout in meting, of circuit-probleem (Filter verstopt). ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Zeer lage compliance (C < 5):"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 665,
+                                                columnNumber: 179
+                                            }, this),
+                                            ' kan echte ARDS zijn, maar ook: patiënt niet volledig sedated, thorax-stijfheid, etc. iASV moet "outliers" herkennen en klinicus waarschuwen.'
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 664,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 662,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 617,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
+                        className: "iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                className: "text-xl font-semibold text-white",
+                                children: "Slotopmerkingen: iASV in Perspectief"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 672,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-emerald-300 mb-2",
+                                        children: "Waarom deze Theorie Belangrijk is"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 675,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            'In moderne IC-zorg is handmatige ventilator-management te veel een "trial-and-error" proces. iASV plaatst klassieke fysiologie (Otis 1950, Mead 1960s) centraal en combineert het met modern longbeschermings-evidence. Dit maakt ventilatie meer ',
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "principieel"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 677,
+                                                columnNumber: 257
+                                            }, this),
+                                            ", minder ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "willekeurig"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 677,
+                                                columnNumber: 318
+                                            }, this),
+                                            "."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 676,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 674,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-emerald-300 mb-2",
+                                        children: "De Toekomst: Adaptiviteit, Heterogeniteit, AI"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 682,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: [
+                                            "Volgende stap: ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "regionale compliance/weerstand-schatting"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 684,
+                                                columnNumber: 30
+                                            }, this),
+                                            " (CT-gebaseerd of PEEP-sweep curves) zodat iASV ook heterogene ARDS kan aanpakken. ",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-yellow-300",
+                                                children: "Machine learning"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 684,
+                                                columnNumber: 194
+                                            }, this),
+                                            " kan patroon-herkenning verbeteren. Maar de onderliggende fysiologie (Otis/Mead) zal waarschijnlijk blijven gelden."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 683,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 681,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "bg-gray-800 border border-gray-700 rounded-xl p-4",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                        className: "text-base font-semibold text-emerald-300 mb-2",
+                                        children: "Voor Klinische Praktijk"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 689,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "text-sm text-gray-300 leading-7",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-yellow-300",
+                                            children: "Onthoud:"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                            lineNumber: 691,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 690,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("ol", {
+                                        className: "list-decimal pl-5 space-y-1 text-sm text-gray-300 mt-2",
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: 'iASV is geen "set and forget". Regelmatig controleren (C, R, PEEPi, V̇A-behoefte).'
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 694,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Altijd de klinische waarnemingen tegen de nummers afwegen. Patiënt is leidraad."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 695,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "Als iASV ongebruikelijk kiest (bijv. f_opt = 30 bpm), denk na: is meting goed? Klopt V̇A-behoefte?"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 696,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                                children: "iASV helpt, vervangt geen klinische oordeel."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                                lineNumber: 697,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                        lineNumber: 693,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                                lineNumber: 688,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/app/theorie-iasv/page.tsx",
+                        lineNumber: 671,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/theorie-iasv/page.tsx",
-                lineNumber: 93,
+                lineNumber: 115,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/theorie-iasv/page.tsx",
-        lineNumber: 75,
+        lineNumber: 97,
         columnNumber: 5
     }, this);
 }
