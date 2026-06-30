@@ -144,7 +144,7 @@ export default function LungProtectionRadar() {
           const color = pct >= 75 ? "#4ade80" : pct >= 50 ? "#facc15" : "#ef4444";
           return (
             <div key={d.subject} className="flex items-center gap-3">
-              <div className="w-28 text-xs text-gray-400 truncate">{d.subject.replace("\n", " ")}</div>
+              <div className="w-44 text-xs text-gray-400">{d.subject.replace("\n", " ")}</div>
               <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300"
