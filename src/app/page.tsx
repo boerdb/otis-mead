@@ -66,6 +66,8 @@ export default function HomePage() {
 
       <footer className="border-t border-gray-800 py-4 text-center text-xs text-gray-600">
         Educatieve simulator — niet voor klinisch gebruik
+        <span className="mx-2 text-gray-700">·</span>
+        © 2026 ClearVision, copyright houder
       </footer>
     </div>
   );
@@ -83,31 +85,31 @@ function FormulaCard() {
           title="Otis — Optimale frequentie"
           formula="2π²τ·f² + f − V̇A/VD = 0"
           note="Minimiseert WOB/min bij constante V̇A"
-          color="#facc15"
+          accentClassName="text-yellow-400"
         />
         <Formula
           title="WOB per adem (Mead)"
           formula="W = VT²/(2C) + π²Rf·VT²/2 + PEEPi·VT"
           note="Elastisch + Resistief + Intrinsiek"
-          color="#0ea5e9"
+          accentClassName="text-sky-400"
         />
         <Formula
           title="Compliance"
           formula="C = τ / R = RC_exp / R"
           note="Afgeleide van tijdconstante"
-          color="#34d399"
+          accentClassName="text-emerald-400"
         />
         <Formula
           title="Driving Pressure"
           formula="ΔP = VT / C"
           note="Longbeschermend < 15 cmH₂O"
-          color="#a78bfa"
+          accentClassName="text-violet-400"
         />
         <Formula
           title="Mechanisch Vermogen"
           formula="MP = 0.098 · f · VT · (Ppeak − PEEP/2)"
           note="Gattinoni 2016 — grens 17 J/min"
-          color="#f472b6"
+          accentClassName="text-pink-400"
         />
       </div>
     </div>
@@ -115,13 +117,13 @@ function FormulaCard() {
 }
 
 function Formula({
-  title, formula, note, color,
+  title, formula, note, accentClassName,
 }: {
-  title: string; formula: string; note: string; color: string;
+  title: string; formula: string; note: string; accentClassName: string;
 }) {
   return (
     <div className="bg-gray-800 rounded-xl p-3">
-      <p className="text-xs font-semibold mb-1" style={{ color }}>{title}</p>
+      <p className={`text-xs font-semibold mb-1 ${accentClassName}`}>{title}</p>
       <p className="text-xs font-mono text-gray-200 bg-gray-900 rounded px-2 py-1 mb-1">{formula}</p>
       <p className="text-xs text-gray-500">{note}</p>
     </div>
