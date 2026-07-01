@@ -125,7 +125,7 @@ export default function TheoryIASVPage() {
 
         {/* HISTORISCHE CONTEXT */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Historische Achtergrond: Otis, Mead, en de Meccanica van Ademen</h2>
+          <h2 className="text-xl font-semibold text-white">Historische Achtergrond: Otis, Mead, en de Mechanica van Ademen</h2>
           <div className="space-y-4">
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
               <h3 className="text-base font-semibold text-sky-300 mb-2">Charles Otis (1915–1993) en het optimale ventilatiemechanisme</h3>
