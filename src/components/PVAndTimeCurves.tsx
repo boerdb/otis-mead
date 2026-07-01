@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { useVentStore } from "@/store/ventStore";
 import { calcIASV, generatePVLoop, generateTimeCurves } from "@/lib/calculations";
+import { chartTooltipContentStyle } from "@/components/chartTooltipStyles";
 
 export default function PVAndTimeCurves() {
   const params = useVentStore((s) => s.params);
@@ -104,7 +105,11 @@ export default function PVAndTimeCurves() {
               tickFormatter={(v) => v.toFixed(0)}
             />
             <Tooltip
-              contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8 }}
+              contentStyle={chartTooltipContentStyle}
+              labelFormatter={(label) => {
+                const t = typeof label === "number" ? label.toFixed(2) : String(label ?? "");
+                return `${t} s`;
+              }}
               formatter={(val: unknown, name: unknown) => [typeof val === 'number' ? val.toFixed(3) : "—", String(name ?? "")]}
             />
             <Legend wrapperStyle={{ fontSize: 11, color: "#94a3b8" }} />

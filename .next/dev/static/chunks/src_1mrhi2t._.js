@@ -410,6 +410,10 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     ()=>calcLungProtection,
     "calcOtis",
     ()=>calcOtis,
+    "calcVtHyperbolaAtF",
+    ()=>calcVtHyperbolaAtF,
+    "calcVtPressureLimitAtF",
+    ()=>calcVtPressureLimitAtF,
     "calcWOB",
     ()=>calcWOB,
     "generatePVLoop",
@@ -571,6 +575,17 @@ function generateWorkspace(params) {
     }
     return points;
 }
+function calcVtHyperbolaAtF(params, fBpm) {
+    const vd = calcDeadSpace(params);
+    const VA_s = params.vaTarget / 60;
+    return VA_s / (fBpm / 60) + vd;
+}
+function calcVtPressureLimitAtF(params, fBpm) {
+    const C = calcCompliance(params);
+    const totalPeep = params.peep + params.autoPeep;
+    const fHz = fBpm / 60;
+    return (params.pLimit - totalPeep) / (1 / C + params.resistance * Math.PI * fHz);
+}
 function generateVentilationHyperbola(params) {
     const vd = calcDeadSpace(params);
     const VA_s = params.vaTarget / 60;
@@ -671,14 +686,14 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/ResponsiveContainer.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$ComposedChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/chart/ComposedChart.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$LineChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/chart/LineChart.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/Line.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Scatter$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/Scatter.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/XAxis.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/YAxis.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/CartesianGrid.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/Tooltip.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/ReferenceLine.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceDot$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/cartesian/ReferenceDot.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/recharts/es6/component/Legend.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$ventStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/store/ventStore.ts [app-client] (ecmascript)");
@@ -690,9 +705,15 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-/**
- * Merge hyperbool en druk-limietlijn in één dataset voor ComposedChart.
- */ function buildDataset(hyperbola, pLimitLine) {
+const F_MIN = 4;
+const F_MAX = 40;
+const CHART_MARGIN = {
+    top: 15,
+    right: 20,
+    bottom: 30,
+    left: 15
+};
+function buildDataset(hyperbola, pLimitLine) {
     const map = new Map();
     for (const p of hyperbola){
         const key = +p.f.toFixed(1);
@@ -712,11 +733,72 @@ var _s = __turbopack_context__.k.signature();
     }
     return Array.from(map.values()).sort((a, b)=>a.f - b.f);
 }
+/** Zet pixel-x (Recharts) om naar frequentie — omzeilt buggy tooltip label bij ComposedChart. */ function frequencyFromCoordinateX(x, chartWidth) {
+    const plotLeft = CHART_MARGIN.left;
+    const plotWidth = chartWidth - CHART_MARGIN.left - CHART_MARGIN.right;
+    if (plotWidth <= 0) return F_MIN;
+    const ratio = (x - plotLeft) / plotWidth;
+    const f = F_MIN + ratio * (F_MAX - F_MIN);
+    return Math.max(F_MIN, Math.min(F_MAX, f));
+}
+function OtisChartTooltip({ active, coordinate, chartWidth, params }) {
+    if (!active || !coordinate || chartWidth <= 0) return null;
+    const f = frequencyFromCoordinateX(coordinate.x, chartWidth);
+    const vtHyp = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$calculations$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["calcVtHyperbolaAtF"])(params, f);
+    const vtPlimit = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$calculations$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["calcVtPressureLimitAtF"])(params, f);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 shadow-lg",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "mb-1 text-xs font-semibold text-slate-200",
+                children: [
+                    f.toFixed(1),
+                    " bpm"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                lineNumber: 85,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-[11px] text-red-400",
+                children: [
+                    "Druk limiet (Ppeak) : ",
+                    vtPlimit.toFixed(3),
+                    " L"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                lineNumber: 86,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "text-[11px] text-cyan-400",
+                children: [
+                    "V̇A hyperbool : ",
+                    vtHyp.toFixed(3),
+                    " L"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                lineNumber: 89,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/src/components/OtisWorkspace.tsx",
+        lineNumber: 84,
+        columnNumber: 5
+    }, this);
+}
+_c = OtisChartTooltip;
 function OtisWorkspace() {
     _s();
     const params = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$ventStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useVentStore"])({
         "OtisWorkspace.useVentStore[params]": (s)=>s.params
     }["OtisWorkspace.useVentStore[params]"]);
+    const chartWrapRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const [chartWidth, setChartWidth] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
     const otis = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"])({
         "OtisWorkspace.useMemo[otis]": ()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$calculations$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["calcOtis"])(params)
     }["OtisWorkspace.useMemo[otis]"], [
@@ -751,18 +833,36 @@ function OtisWorkspace() {
     const vtKg8 = params.ibw * 8 / 1000;
     const vtKg6 = params.ibw * 6 / 1000;
     const vtDriving15 = 15 * C;
-    const scatterOtis = [
-        {
-            f: otis.fOptBpm,
-            vt: otis.vtOpt
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "OtisWorkspace.useEffect": ()=>{
+            const el = chartWrapRef.current;
+            if (!el) return;
+            const update = {
+                "OtisWorkspace.useEffect.update": ()=>setChartWidth(el.clientWidth)
+            }["OtisWorkspace.useEffect.update"];
+            update();
+            const ro = new ResizeObserver(update);
+            ro.observe(el);
+            return ({
+                "OtisWorkspace.useEffect": ()=>ro.disconnect()
+            })["OtisWorkspace.useEffect"];
         }
-    ];
-    const scatterIASV = [
-        {
-            f: iasv.fActual,
-            vt: iasv.vtActual
-        }
-    ];
+    }["OtisWorkspace.useEffect"], []);
+    const renderTooltip = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"])({
+        "OtisWorkspace.useCallback[renderTooltip]": (props)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(OtisChartTooltip, {
+                active: props.active,
+                coordinate: props.coordinate,
+                chartWidth: chartWidth,
+                params: params
+            }, void 0, false, {
+                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                lineNumber: 128,
+                columnNumber: 7
+            }, this)
+    }["OtisWorkspace.useCallback[renderTooltip]"], [
+        chartWidth,
+        params
+    ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "bg-gray-900 border border-gray-700 rounded-2xl p-5",
         children: [
@@ -777,14 +877,14 @@ function OtisWorkspace() {
                                 children: "T"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                                lineNumber: 69,
+                                lineNumber: 142,
                                 columnNumber: 33
                             }, this),
                             " vlak"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/OtisWorkspace.tsx",
-                        lineNumber: 68,
+                        lineNumber: 141,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -792,212 +892,215 @@ function OtisWorkspace() {
                         children: "V̇A-hyperbool (cyaan) · Druklimieten (rood) · ★ Otis-optimum (geel) · ● iASV werkpunt (groen)"
                     }, void 0, false, {
                         fileName: "[project]/src/components/OtisWorkspace.tsx",
-                        lineNumber: 71,
+                        lineNumber: 144,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                lineNumber: 67,
+                lineNumber: 140,
                 columnNumber: 7
             }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
-                width: "100%",
-                height: 380,
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$ComposedChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ComposedChart"], {
-                    data: dataset,
-                    margin: {
-                        top: 15,
-                        right: 20,
-                        bottom: 30,
-                        left: 15
-                    },
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CartesianGrid"], {
-                            strokeDasharray: "3 3",
-                            stroke: "#1e293b"
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 81,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
-                            dataKey: "f",
-                            type: "number",
-                            domain: [
-                                4,
-                                40
-                            ],
-                            tickCount: 10,
-                            label: {
-                                value: "Frequentie (bpm)",
-                                position: "insideBottomRight",
-                                offset: -5,
-                                fill: "#94a3b8",
-                                fontSize: 11
-                            },
-                            tick: {
-                                fill: "#64748b",
-                                fontSize: 11
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 82,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
-                            domain: [
-                                0.1,
-                                1.6
-                            ],
-                            tickFormatter: (v)=>v.toFixed(2),
-                            label: {
-                                value: "VT (L)",
-                                angle: -90,
-                                position: "insideLeft",
-                                fill: "#94a3b8",
-                                fontSize: 11
-                            },
-                            tick: {
-                                fill: "#64748b",
-                                fontSize: 11
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 90,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
-                            contentStyle: {
-                                background: "#0f172a",
-                                border: "1px solid #334155",
-                                borderRadius: 8
-                            },
-                            formatter: (val, name)=>[
-                                    typeof val === 'number' ? val.toFixed(3) : "—",
-                                    String(name ?? "")
-                                ]
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 96,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Legend"], {
-                            wrapperStyle: {
-                                fontSize: 11,
-                                color: "#94a3b8"
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 100,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
-                            dataKey: "vt_hyp",
-                            name: "V̇A hyperbool",
-                            stroke: "#22d3ee",
-                            strokeWidth: 2.5,
-                            dot: false,
-                            isAnimationActive: false,
-                            connectNulls: false
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 102,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
-                            dataKey: "vt_plimit",
-                            name: "Druk limiet (Ppeak)",
-                            stroke: "#ef4444",
-                            strokeWidth: 1.5,
-                            strokeDasharray: "6 3",
-                            dot: false,
-                            isAnimationActive: false,
-                            connectNulls: false
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 111,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
-                            y: vtKg8,
-                            stroke: "#f59e0b",
-                            strokeDasharray: "5 4",
-                            strokeWidth: 1.5,
-                            label: {
-                                value: "8 mL/kg",
-                                fill: "#f59e0b",
-                                fontSize: 10,
-                                position: "insideTopRight"
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 122,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
-                            y: vtKg6,
-                            stroke: "#fbbf24",
-                            strokeDasharray: "3 4",
-                            strokeWidth: 1,
-                            label: {
-                                value: "6 mL/kg",
-                                fill: "#fbbf24",
-                                fontSize: 9,
-                                position: "insideTopRight"
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 124,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
-                            y: vtDriving15,
-                            stroke: "#a78bfa",
-                            strokeDasharray: "5 4",
-                            strokeWidth: 1,
-                            label: {
-                                value: "ΔP=15",
-                                fill: "#a78bfa",
-                                fontSize: 10,
-                                position: "insideTopLeft"
-                            }
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 126,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Scatter$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Scatter"], {
-                            data: scatterOtis,
-                            dataKey: "vt",
-                            name: "★ Otis-optimum",
-                            fill: "#facc15",
-                            isAnimationActive: false
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 129,
-                            columnNumber: 11
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Scatter$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Scatter"], {
-                            data: scatterIASV,
-                            dataKey: "vt",
-                            name: "● iASV werkpunt",
-                            fill: "#4ade80",
-                            isAnimationActive: false
-                        }, void 0, false, {
-                            fileName: "[project]/src/components/OtisWorkspace.tsx",
-                            lineNumber: 136,
-                            columnNumber: 11
-                        }, this)
-                    ]
-                }, void 0, true, {
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                ref: chartWrapRef,
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$ResponsiveContainer$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ResponsiveContainer"], {
+                    width: "100%",
+                    height: 380,
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$chart$2f$LineChart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["LineChart"], {
+                        data: dataset,
+                        margin: CHART_MARGIN,
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$CartesianGrid$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CartesianGrid"], {
+                                strokeDasharray: "3 3",
+                                stroke: "#1e293b"
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 155,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$XAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["XAxis"], {
+                                dataKey: "f",
+                                type: "number",
+                                domain: [
+                                    F_MIN,
+                                    F_MAX
+                                ],
+                                tickCount: 10,
+                                label: {
+                                    value: "Frequentie (bpm)",
+                                    position: "insideBottomRight",
+                                    offset: -5,
+                                    fill: "#94a3b8",
+                                    fontSize: 11
+                                },
+                                tick: {
+                                    fill: "#64748b",
+                                    fontSize: 11
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 156,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$YAxis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["YAxis"], {
+                                domain: [
+                                    0.1,
+                                    1.6
+                                ],
+                                tickFormatter: (v)=>v.toFixed(2),
+                                label: {
+                                    value: "VT (L)",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    fill: "#94a3b8",
+                                    fontSize: 11
+                                },
+                                tick: {
+                                    fill: "#64748b",
+                                    fontSize: 11
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 164,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Tooltip$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
+                                shared: true,
+                                cursor: {
+                                    stroke: "#94a3b8",
+                                    strokeWidth: 1
+                                },
+                                content: renderTooltip
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 170,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$component$2f$Legend$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Legend"], {
+                                wrapperStyle: {
+                                    fontSize: 11,
+                                    color: "#94a3b8"
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 175,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
+                                dataKey: "vt_hyp",
+                                name: "V̇A hyperbool",
+                                stroke: "#22d3ee",
+                                strokeWidth: 2.5,
+                                dot: false,
+                                isAnimationActive: false,
+                                connectNulls: false
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 177,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
+                                dataKey: "vt_plimit",
+                                name: "Druk limiet (Ppeak)",
+                                stroke: "#ef4444",
+                                strokeWidth: 1.5,
+                                strokeDasharray: "6 3",
+                                dot: false,
+                                isAnimationActive: false,
+                                connectNulls: false
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 186,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
+                                y: vtKg8,
+                                stroke: "#f59e0b",
+                                strokeDasharray: "5 4",
+                                strokeWidth: 1.5,
+                                label: {
+                                    value: "8 mL/kg",
+                                    fill: "#f59e0b",
+                                    fontSize: 10,
+                                    position: "insideTopRight"
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 197,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
+                                y: vtKg6,
+                                stroke: "#fbbf24",
+                                strokeDasharray: "3 4",
+                                strokeWidth: 1,
+                                label: {
+                                    value: "6 mL/kg",
+                                    fill: "#fbbf24",
+                                    fontSize: 9,
+                                    position: "insideTopRight"
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 199,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceLine$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceLine"], {
+                                y: vtDriving15,
+                                stroke: "#a78bfa",
+                                strokeDasharray: "5 4",
+                                strokeWidth: 1,
+                                label: {
+                                    value: "ΔP=15",
+                                    fill: "#a78bfa",
+                                    fontSize: 10,
+                                    position: "insideTopLeft"
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 201,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceDot$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceDot"], {
+                                x: otis.fOptBpm,
+                                y: otis.vtOpt,
+                                r: 7,
+                                fill: "#facc15",
+                                stroke: "#ca8a04",
+                                strokeWidth: 1,
+                                ifOverflow: "visible"
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 204,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$ReferenceDot$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReferenceDot"], {
+                                x: iasv.fActual,
+                                y: iasv.vtActual,
+                                r: 6,
+                                fill: "#4ade80",
+                                stroke: "#16a34a",
+                                strokeWidth: 1,
+                                ifOverflow: "visible"
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/OtisWorkspace.tsx",
+                                lineNumber: 213,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/components/OtisWorkspace.tsx",
+                        lineNumber: 151,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
                     fileName: "[project]/src/components/OtisWorkspace.tsx",
-                    lineNumber: 77,
+                    lineNumber: 150,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                lineNumber: 76,
+                lineNumber: 149,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1026,7 +1129,7 @@ function OtisWorkspace() {
                         ]
                     }, void 0, false, {
                         fileName: "[project]/src/components/OtisWorkspace.tsx",
-                        lineNumber: 148,
+                        lineNumber: 228,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SummaryBox, {
@@ -1051,28 +1154,28 @@ function OtisWorkspace() {
                         ]
                     }, void 0, false, {
                         fileName: "[project]/src/components/OtisWorkspace.tsx",
-                        lineNumber: 158,
+                        lineNumber: 238,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                lineNumber: 147,
+                lineNumber: 227,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/OtisWorkspace.tsx",
-        lineNumber: 66,
+        lineNumber: 139,
         columnNumber: 5
     }, this);
 }
-_s(OtisWorkspace, "54eLbFLCgwvdGKyvHTR3TQuRMgg=", false, function() {
+_s(OtisWorkspace, "18ldzzlUdN5pcXHfUrP98NF61jc=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2f$ventStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useVentStore"]
     ];
 });
-_c = OtisWorkspace;
+_c1 = OtisWorkspace;
 const colorMap = {
     yellow: "bg-yellow-950/40 border-yellow-800/40 text-yellow-400",
     green: "bg-green-950/40 border-green-800/40 text-green-400",
@@ -1087,7 +1190,7 @@ function SummaryBox({ label, color, items }) {
                 children: label
             }, void 0, false, {
                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                lineNumber: 184,
+                lineNumber: 264,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1102,7 +1205,7 @@ function SummaryBox({ label, color, items }) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                                lineNumber: 188,
+                                lineNumber: 268,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1110,31 +1213,32 @@ function SummaryBox({ label, color, items }) {
                                 children: v
                             }, void 0, false, {
                                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                                lineNumber: 189,
+                                lineNumber: 269,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, k, true, {
                         fileName: "[project]/src/components/OtisWorkspace.tsx",
-                        lineNumber: 187,
+                        lineNumber: 267,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/OtisWorkspace.tsx",
-                lineNumber: 185,
+                lineNumber: 265,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/OtisWorkspace.tsx",
-        lineNumber: 183,
+        lineNumber: 263,
         columnNumber: 5
     }, this);
 }
-_c1 = SummaryBox;
-var _c, _c1;
-__turbopack_context__.k.register(_c, "OtisWorkspace");
-__turbopack_context__.k.register(_c1, "SummaryBox");
+_c2 = SummaryBox;
+var _c, _c1, _c2;
+__turbopack_context__.k.register(_c, "OtisChartTooltip");
+__turbopack_context__.k.register(_c1, "OtisWorkspace");
+__turbopack_context__.k.register(_c2, "SummaryBox");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
@@ -1792,7 +1896,7 @@ function LungProtectionRadar() {
                         className: "flex items-center gap-3",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "w-28 text-xs text-gray-400 truncate",
+                                className: "w-44 text-xs text-gray-400",
                                 children: d.subject.replace("\n", " ")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LungProtectionRadar.tsx",
@@ -2177,6 +2281,7 @@ function PVAndTimeCurves() {
                                         border: "1px solid #334155",
                                         borderRadius: 8
                                     },
+                                    labelFormatter: (label)=>typeof label === "number" ? label.toFixed(2) : String(label ?? ""),
                                     formatter: (val, name)=>[
                                             typeof val === 'number' ? val.toFixed(3) : "—",
                                             String(name ?? "")
@@ -2193,7 +2298,7 @@ function PVAndTimeCurves() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/PVAndTimeCurves.tsx",
-                                    lineNumber: 110,
+                                    lineNumber: 113,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
@@ -2206,7 +2311,7 @@ function PVAndTimeCurves() {
                                     name: "Flow (L/s)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/PVAndTimeCurves.tsx",
-                                    lineNumber: 111,
+                                    lineNumber: 114,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
@@ -2219,7 +2324,7 @@ function PVAndTimeCurves() {
                                     name: "Druk (cmH₂O)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/PVAndTimeCurves.tsx",
-                                    lineNumber: 120,
+                                    lineNumber: 123,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$recharts$2f$es6$2f$cartesian$2f$Line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Line"], {
@@ -2233,7 +2338,7 @@ function PVAndTimeCurves() {
                                     name: "Volume (mL)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/PVAndTimeCurves.tsx",
-                                    lineNumber: 129,
+                                    lineNumber: 132,
                                     columnNumber: 13
                                 }, this)
                             ]
@@ -3038,8 +3143,19 @@ function HomePage() {
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
                 className: "border-t border-gray-800 py-4 text-center text-xs text-gray-600",
-                children: "Educatieve simulator — niet voor klinisch gebruik"
-            }, void 0, false, {
+                children: [
+                    "Educatieve simulator — niet voor klinisch gebruik",
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: "mx-2 text-gray-700",
+                        children: "·"
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/page.tsx",
+                        lineNumber: 69,
+                        columnNumber: 9
+                    }, this),
+                    "© 2026 ClearVision, copyright houder"
+                ]
+            }, void 0, true, {
                 fileName: "[project]/src/app/page.tsx",
                 lineNumber: 67,
                 columnNumber: 7
@@ -3061,7 +3177,7 @@ function FormulaCard() {
                 children: "Kernformules"
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 77,
+                lineNumber: 79,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3071,79 +3187,76 @@ function FormulaCard() {
                         title: "Otis — Optimale frequentie",
                         formula: "2π²τ·f² + f − V̇A/VD = 0",
                         note: "Minimiseert WOB/min bij constante V̇A",
-                        color: "#facc15"
+                        accentClassName: "text-yellow-400"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 82,
+                        lineNumber: 84,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Formula, {
                         title: "WOB per adem (Mead)",
                         formula: "W = VT²/(2C) + π²Rf·VT²/2 + PEEPi·VT",
                         note: "Elastisch + Resistief + Intrinsiek",
-                        color: "#0ea5e9"
+                        accentClassName: "text-sky-400"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 88,
+                        lineNumber: 90,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Formula, {
                         title: "Compliance",
                         formula: "C = τ / R = RC_exp / R",
                         note: "Afgeleide van tijdconstante",
-                        color: "#34d399"
+                        accentClassName: "text-emerald-400"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 94,
+                        lineNumber: 96,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Formula, {
                         title: "Driving Pressure",
                         formula: "ΔP = VT / C",
                         note: "Longbeschermend < 15 cmH₂O",
-                        color: "#a78bfa"
+                        accentClassName: "text-violet-400"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 100,
+                        lineNumber: 102,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Formula, {
                         title: "Mechanisch Vermogen",
                         formula: "MP = 0.098 · f · VT · (Ppeak − PEEP/2)",
                         note: "Gattinoni 2016 — grens 17 J/min",
-                        color: "#f472b6"
+                        accentClassName: "text-pink-400"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 106,
+                        lineNumber: 108,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 81,
+                lineNumber: 83,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.tsx",
-        lineNumber: 76,
+        lineNumber: 78,
         columnNumber: 5
     }, this);
 }
 _c1 = FormulaCard;
-function Formula({ title, formula, note, color }) {
+function Formula({ title, formula, note, accentClassName }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "bg-gray-800 rounded-xl p-3",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                className: "text-xs font-semibold mb-1",
-                style: {
-                    color
-                },
+                className: `text-xs font-semibold mb-1 ${accentClassName}`,
                 children: title
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 124,
+                lineNumber: 126,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3151,7 +3264,7 @@ function Formula({ title, formula, note, color }) {
                 children: formula
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 125,
+                lineNumber: 127,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3159,13 +3272,13 @@ function Formula({ title, formula, note, color }) {
                 children: note
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 126,
+                lineNumber: 128,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.tsx",
-        lineNumber: 123,
+        lineNumber: 125,
         columnNumber: 5
     }, this);
 }

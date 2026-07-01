@@ -226,6 +226,21 @@ export function generateWorkspace(params: VentilatorParams): WorkspacePoint[] {
   return points;
 }
 
+/** VT op de V̇A-hyperbool bij gegeven f (bpm). */
+export function calcVtHyperbolaAtF(params: VentilatorParams, fBpm: number): number {
+  const vd = calcDeadSpace(params);
+  const VA_s = params.vaTarget / 60;
+  return VA_s / (fBpm / 60) + vd;
+}
+
+/** VT op de druk-limietlijn bij gegeven f (bpm). */
+export function calcVtPressureLimitAtF(params: VentilatorParams, fBpm: number): number {
+  const C = calcCompliance(params);
+  const totalPeep = params.peep + params.autoPeep;
+  const fHz = fBpm / 60;
+  return (params.pLimit - totalPeep) / (1 / C + params.resistance * Math.PI * fHz);
+}
+
 /**
  * Genereert de ventilatiehyperbool (VT = V̇A/f + VD) voor f = 4..40 bpm.
  */
