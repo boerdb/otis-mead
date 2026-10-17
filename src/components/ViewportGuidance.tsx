@@ -1,32 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RotateCw, Smartphone } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Monitor, X } from "lucide-react";
 
-const PHONE_DISMISS_KEY = "iasv-mobile-warning-dismissed";
+const DISMISS_KEY = "iasv-small-screen-hint-dismissed";
 
-type ViewportMode = "phone" | "tablet-portrait" | "ok";
-
-function getViewportMode(): ViewportMode {
-  if (typeof window === "undefined") return "ok";
-
-  if (window.matchMedia("(max-width: 767px)").matches) return "phone";
-  if (window.matchMedia("(min-width: 768px) and (orientation: portrait)").matches) {
-    return "tablet-portrait";
-  }
-  return "ok";
+function isSmallScreen(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(max-width: 1023px)").matches;
 }
 
+function readDismissed(): boolean {
+  try {
+    return localStorage.getItem(DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Kleine, sluitbare hint op smalle schermen; de simulator blijft gewoon bruikbaar. */
 export default function ViewportGuidance() {
-  const [mode, setMode] = useState<ViewportMode>("ok");
-  const [phoneDismissed, setPhoneDismissed] = useState(true);
+  const pathname = usePathname();
+  const [small, setSmall] = useState(false);
+  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(PHONE_DISMISS_KEY) === "1";
-    setPhoneDismissed(dismissed);
-    setMode(getViewportMode());
+    setDismissed(readDismissed());
+    setSmall(isSmallScreen());
 
-    const update = () => setMode(getViewportMode());
+    const update = () => setSmall(isSmallScreen());
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     return () => {
@@ -35,47 +38,35 @@ export default function ViewportGuidance() {
     };
   }, []);
 
-  if (mode === "phone" && !phoneDismissed) {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-6">
-        <div className="w-full max-w-md rounded-xl border border-gray-700 bg-gray-900 p-6 shadow-2xl">
-          <div className="mb-4 flex items-center gap-3">
-            <Smartphone size={22} className="shrink-0 text-sky-400" />
-            <h2 className="text-base font-semibold text-white">Klein scherm gedetecteerd</h2>
-          </div>
-          <p className="text-sm leading-relaxed text-gray-300">
-            Voor de beste ervaring raden we aan deze simulator op een tablet of groot scherm te
-            bekijken. Op een telefoon zijn de grafieken en bediening moeilijk te gebruiken.
-          </p>
-          <button
-            type="button"
-            className="mt-5 w-full rounded-lg bg-sky-600 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sky-500"
-            onClick={() => {
-              localStorage.setItem(PHONE_DISMISS_KEY, "1");
-              setPhoneDismissed(true);
-            }}
-          >
-            Toch doorgaan
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Alleen relevant voor de simulator; de theoriepagina is gewoon een leespagina.
+  if (pathname !== "/" || !small || dismissed) return null;
 
-  if (mode === "tablet-portrait") {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/95 p-6">
-        <div className="w-full max-w-sm text-center">
-          <RotateCw size={40} className="mx-auto mb-5 animate-pulse text-sky-400" />
-          <h2 className="mb-3 text-lg font-semibold text-white">Draai uw tablet</h2>
-          <p className="text-sm leading-relaxed text-gray-400">
-            Voor de beste ervaring bekijkt u deze simulator het beste in landscape (liggende)
-            modus.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+    } catch {
+      // Opslag niet beschikbaar: de hint verdwijnt alleen voor deze sessie.
+    }
+  };
 
-  return null;
+  return (
+    <div
+      role="status"
+      className="fixed inset-x-3 bottom-3 z-[100] flex items-start gap-3 rounded-xl border border-gray-700 bg-gray-900/95 p-3 shadow-2xl backdrop-blur sm:left-auto sm:right-4 sm:max-w-sm"
+    >
+      <Monitor size={18} className="mt-0.5 shrink-0 text-sky-400" />
+      <p className="text-xs leading-relaxed text-gray-300">
+        Op een groot scherm staan parameters, grafieken en beslissing naast elkaar. Op dit scherm staan ze onder elkaar; de balk bovenaan toont het actuele werkpunt.
+      </p>
+      <button
+        type="button"
+        onClick={dismiss}
+        aria-label="Melding sluiten"
+        className="-m-1 shrink-0 rounded p-1 text-gray-400 hover:text-white"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  );
 }

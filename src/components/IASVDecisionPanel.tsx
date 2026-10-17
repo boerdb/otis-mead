@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { useVentStore } from "@/store/ventStore";
-import { calcIASV, calcOtis, calcLungProtection, calcWOB } from "@/lib/calculations";
-import { CheckCircle, AlertTriangle, XCircle, ArrowRight } from "lucide-react";
+import { LIMITS, calcIASV, calcOtis, calcLungProtection, calcWOB } from "@/lib/calculations";
+import { CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 
 export default function IASVDecisionPanel() {
   const params = useVentStore((s) => s.params);
@@ -39,27 +39,30 @@ export default function IASVDecisionPanel() {
     },
     {
       label: "Stap 3 — Druk Limiet Check",
-      desc: `Ppeak = PEEP_tot + VT·[1/(2C) + √(1/(4C²) + (Rπf)²)] ≤ ${params.pLimit} cmH₂O`,
-      detail: `Ppeak (Otis) = ${protOtis.peakPressure.toFixed(1)} cmH₂O`,
+      desc: `Pinsp = PEEP + ΔPinsp ≤ ${params.pLimit} cmH₂O (drukgecontroleerd, I:E 1:2)`,
+      detail: `Pinsp (Otis) = ${protOtis.peakPressure.toFixed(1)} cmH₂O`,
       status: protOtis.peakPressure <= params.pLimit ? "ok" : "warn",
     },
     {
-      label: "Stap 4 — Driving Pressure Check",
-      desc: "ΔP = VT / C ≤ 15 cmH₂O (longbeschermend)",
-      detail: `ΔP = ${protOtis.drivingPressure.toFixed(1)} cmH₂O`,
-      status: protOtis.drivingPressure <= 15 ? "ok" : "warn",
+      label: "Stap 4 — Driving Pressure en Plateau",
+      desc: `ΔP = VT / C ≤ ${LIMITS.drivingPressure} en Pplat ≤ ${LIMITS.platPressure} cmH₂O`,
+      detail: `ΔP = ${protOtis.drivingPressure.toFixed(1)}  |  Pplat = ${protOtis.platPressure.toFixed(1)} cmH₂O`,
+      status:
+        protOtis.drivingPressure <= LIMITS.drivingPressure && protOtis.platPressure <= LIMITS.platPressure
+          ? "ok"
+          : "warn",
     },
     {
       label: "Stap 5 — VT/kg Veiligheidsgrens",
-      desc: "VT ≤ 8 mL/kg IBW (didactische grens; ARDSnet streeft 6 mL/kg na)",
+      desc: `VT ≤ ${LIMITS.vtPerKg} mL/kg IBW (didactische grens; ARDSnet streeft 6 mL/kg na)`,
       detail: `VT/kg = ${protOtis.vtPerKg.toFixed(1)} mL/kg  (IBW = ${params.ibw} kg)`,
-      status: protOtis.vtPerKg <= 8 ? "ok" : "warn",
+      status: protOtis.vtPerKg <= LIMITS.vtPerKg ? "ok" : "warn",
     },
     {
-      label: "Stap 6 — Auto-PEEP Compensatie",
-      desc: "WOB_intrinsic = PEEPi × VT (extra arbeid voor trigger)",
-      detail: `PEEPi = ${params.autoPeep} cmH₂O  →  extra ${(params.autoPeep * iasv.vtActual * 0.098).toFixed(4)} J/adem`,
-      status: params.autoPeep === 0 ? "ok" : params.autoPeep <= 5 ? "warn" : "error",
+      label: "Stap 6 — Auto-PEEP",
+      desc: "Onvolledige expiratie binnen Te = ⅔ van de cyclus; PEEPi = ingesloten volume / C",
+      detail: `PEEPi (iASV) = ${protIASV.autoPeep.toFixed(1)} cmH₂O  |  drempelwerk ${(wobIASV.intrinsic * 1000).toFixed(1)} mJ/adem`,
+      status: protIASV.autoPeep < 1 ? "ok" : protIASV.autoPeep <= LIMITS.autoPeep ? "warn" : "error",
     },
     {
       label: "Stap 7 — iASV Definitieve Keuze",
@@ -71,10 +74,23 @@ export default function IASVDecisionPanel() {
       detail: `f = ${iasv.fActual.toFixed(1)} bpm  |  VT = ${(iasv.vtActual * 1000).toFixed(0)} mL`,
       status: !iasv.feasible ? "error" : iasv.constrained ? "warn" : "ok",
     },
+    ...(params.fSpont > 0
+      ? [{
+          label: "Stap 8 — Eigen ademactiviteit",
+          desc: iasv.measured.spontaneous
+            ? `Patiënt ademt ${params.fSpont}/min, boven het doel: alle teugen spontaan, minuutvolume ${iasv.minuteVolume.toFixed(2)} L/min blijft gelijk`
+            : `Patiënt ademt ${params.fSpont}/min, onder het doel: ASV vult aan met verplichte teugen`,
+          detail: iasv.measured.spontaneous
+            ? `gemeten f = ${iasv.measured.fBpm.toFixed(0)}  |  VT = ${(iasv.measured.vt * 1000).toFixed(0)} mL  |  V̇A = ${iasv.measured.alveolarVentilation.toFixed(2)} L/min`
+            : `${iasv.measured.mandatoryBpm.toFixed(1)} verplichte + ${params.fSpont} spontane teugen/min`,
+          status: iasv.measured.spontaneous && iasv.measured.vt < iasv.vtMin ? "error"
+            : iasv.measured.spontaneous ? "warn" : "ok",
+        }]
+      : []),
   ];
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5 space-y-5">
+    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-5 space-y-5">
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
           iASV Beslissingsalgoritme
@@ -122,21 +138,22 @@ export default function IASVDecisionPanel() {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-gray-500 border-b border-gray-700">
-                <th className="text-left py-1 pr-3 font-medium">Parameter</th>
-                <th className="text-right py-1 px-3 font-medium text-yellow-400">Otis</th>
-                <th className="text-center py-1 px-1"><ArrowRight size={12} className="text-gray-600 inline" /></th>
-                <th className="text-right py-1 px-3 font-medium text-green-400">iASV</th>
-                <th className="text-right py-1 pl-3 font-medium">Grens</th>
+                <th className="text-left py-1 pr-2 font-medium">Parameter</th>
+                <th className="text-right py-1 px-2 font-medium text-yellow-400">Otis</th>
+                <th className="text-right py-1 px-2 font-medium text-green-400">iASV</th>
+                <th className="text-right py-1 pl-2 font-medium">Grens</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              <CompRow label="Frequentie"    otis={`${otis.fOptBpm.toFixed(1)} bpm`}           iasv={`${iasv.fActual.toFixed(1)} bpm`}         limit="—" />
-              <CompRow label="VT"            otis={`${(otis.vtOpt*1000).toFixed(0)} mL`}       iasv={`${(iasv.vtActual*1000).toFixed(0)} mL`}  limit="≤ 8 mL/kg" />
-              <CompRow label="VT/kg"         otis={`${protOtis.vtPerKg.toFixed(1)} mL/kg`}     iasv={`${protIASV.vtPerKg.toFixed(1)} mL/kg`}   limit="≤ 8" warn={protOtis.vtPerKg > 8} />
-              <CompRow label="Ppeak"         otis={`${protOtis.peakPressure.toFixed(1)} cmH₂O`} iasv={`${protIASV.peakPressure.toFixed(1)} cmH₂O`} limit={`≤ ${params.pLimit}`} warn={protOtis.peakPressure > params.pLimit} />
-              <CompRow label="ΔP (driving)"  otis={`${protOtis.drivingPressure.toFixed(1)} cmH₂O`} iasv={`${protIASV.drivingPressure.toFixed(1)} cmH₂O`} limit="≤ 15" warn={protOtis.drivingPressure > 15} />
-              <CompRow label="WOB"           otis={`${wobOtis.perMinute.toFixed(3)} J/min`}    iasv={`${wobIASV.perMinute.toFixed(3)} J/min`}  limit="min" />
-              <CompRow label="Mech. vermogen" otis={`${protOtis.mechPower.toFixed(2)} J/min`}  iasv={`${protIASV.mechPower.toFixed(2)} J/min`}  limit="≤ 17" warn={protIASV.mechPower > 17} />
+              <CompRow label="f (/min)" otis={`${otis.fOptBpm.toFixed(1)}`} iasv={`${iasv.fActual.toFixed(1)}`} limit={`≤ ${iasv.fMaxBpm.toFixed(0)}`} />
+              <CompRow label="VT (mL)" otis={`${(otis.vtOpt * 1000).toFixed(0)}`} iasv={`${(iasv.vtActual * 1000).toFixed(0)}`} limit={`≥ ${(iasv.vtMin * 1000).toFixed(0)}`} />
+              <CompRow label="VT/kg (mL/kg)" otis={`${protOtis.vtPerKg.toFixed(1)}`} iasv={`${protIASV.vtPerKg.toFixed(1)}`} limit={`≤ ${LIMITS.vtPerKg}`} warn={protOtis.vtPerKg > LIMITS.vtPerKg} />
+              <CompRow label="Pinsp (cmH₂O)" otis={`${protOtis.peakPressure.toFixed(1)}`} iasv={`${protIASV.peakPressure.toFixed(1)}`} limit={`≤ ${params.pLimit}`} warn={protOtis.peakPressure > params.pLimit} />
+              <CompRow label="Pplat (cmH₂O)" otis={`${protOtis.platPressure.toFixed(1)}`} iasv={`${protIASV.platPressure.toFixed(1)}`} limit={`≤ ${LIMITS.platPressure}`} warn={protOtis.platPressure > LIMITS.platPressure} />
+              <CompRow label="ΔP (cmH₂O)" otis={`${protOtis.drivingPressure.toFixed(1)}`} iasv={`${protIASV.drivingPressure.toFixed(1)}`} limit={`≤ ${LIMITS.drivingPressure}`} warn={protOtis.drivingPressure > LIMITS.drivingPressure} />
+              <CompRow label="PEEPi (cmH₂O)" otis={`${protOtis.autoPeep.toFixed(1)}`} iasv={`${protIASV.autoPeep.toFixed(1)}`} limit={`≤ ${LIMITS.autoPeep}`} warn={protOtis.autoPeep > LIMITS.autoPeep} />
+              <CompRow label="WOB (J/min)" otis={`${wobOtis.perMinute.toFixed(2)}`} iasv={`${wobIASV.perMinute.toFixed(2)}`} limit="min" />
+              <CompRow label="MP (J/min)" otis={`${protOtis.mechPower.toFixed(1)}`} iasv={`${protIASV.mechPower.toFixed(1)}`} limit={`≤ ${LIMITS.mechPower}`} warn={protOtis.mechPower > LIMITS.mechPower} />
             </tbody>
           </table>
         </div>
@@ -158,11 +175,10 @@ function CompRow({
 }) {
   return (
     <tr className="hover:bg-gray-800/30">
-      <td className="py-1.5 pr-3 text-gray-400">{label}</td>
-      <td className={`text-right px-3 font-mono ${warn ? "text-red-400" : "text-yellow-300"}`}>{otis}</td>
-      <td className="text-center px-1 text-gray-700">→</td>
-      <td className="text-right px-3 font-mono text-green-300">{iasv}</td>
-      <td className="text-right pl-3 text-gray-500">{limit}</td>
+      <td className="py-1.5 pr-2 text-gray-400 whitespace-nowrap">{label}</td>
+      <td className={`text-right px-2 font-mono whitespace-nowrap ${warn ? "text-red-400" : "text-yellow-300"}`}>{otis}</td>
+      <td className="text-right px-2 font-mono whitespace-nowrap text-green-300">{iasv}</td>
+      <td className="text-right pl-2 text-gray-500 whitespace-nowrap">{limit}</td>
     </tr>
   );
 }

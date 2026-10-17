@@ -9,14 +9,17 @@
  *  - Gattinoni L et al. (2016) "Ventilator-related causes of lung injury: the mechanical power"
  *    Intensive Care Med 42:1567–1575
  *
- * Model: één-compartiment long (lineaire R en C) met sinusoïdaal flowprofiel,
- * inspiratie = eerste halve periode, expiratie passief (geen spierarbeid).
+ * Model: één-compartiment long met lineaire R en C.
+ *  - Het doel (f, VT) volgt uit de Otis-vergelijking (sinusoïdale flow, zoals in ASV).
+ *  - De ademteug wordt drukgecontroleerd afgegeven zoals bij ASV: blokvormige
+ *    inspiratiedruk, I:E = 1:2, passieve exponentiële expiratie, in stationaire toestand.
+ *    Onvolledige expiratie levert dynamische auto-PEEP op.
  *
  * Eenheden:
  *   Druk  → cmH₂O
  *   Volume → L
  *   Tijd  → s
- *   Flow  → L/s
+ *   Flow  → L/s (curven in L/min)
  *   Werk  → J  (1 cmH₂O·L = 0.0980665 J)
  */
 
@@ -25,6 +28,8 @@ import type {
   OtisResult,
   WOBResult,
   LungProtectionResult,
+  BreathResult,
+  ProtectionScore,
   iASVDecision,
   WorkspacePoint,
 } from "./types";
@@ -41,11 +46,15 @@ export const LIMITS = {
   platPressure:    30, // cmH₂O
   vtPerKg:         8,  // mL/kg IBW
   mechPower:       17, // J/min
+  autoPeep:        5,  // cmH₂O
 } as const;
 
 /** ASV-regels: f ≥ 5/min, f ≤ 60/min en f ≤ 20/τ (Ti ≥ 1τ, Te ≥ 2τ). */
 export const ASV_F_MIN_BPM = 5;
 export const ASV_F_MAX_BPM = 60;
+
+/** Verhouding Te/Ti van de afgegeven ademteug (I:E = 1:2). */
+export const IE_RATIO = 2;
 
 // ─── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -98,6 +107,7 @@ export function calcOtis(params: VentilatorParams): OtisResult {
  *   W_res   = π²·R·f·VT² / 4               [cmH₂O·L]  (alleen inspiratie)
  *   W_iPEEP = PEEPi · VT                   [cmH₂O·L]
  *
+ * PEEPi is de dynamische auto-PEEP van de afgegeven ademteug (zie calcBreath).
  * Expiratie is passief en telt niet mee. Alles × 0.098 → Joule.
  */
 export function calcWOB(
@@ -106,10 +116,11 @@ export function calcWOB(
   vt: number
 ): WOBResult {
   const C = calcCompliance(params);
+  const { autoPeep } = calcBreath(params, fHz, vt);
 
   const elastic   = (vt ** 2 / (2 * C))                  * CMH2O_TO_JOULE;
   const resistive = (PI2 * params.resistance * fHz * vt ** 2) / 4 * CMH2O_TO_JOULE;
-  const intrinsic = params.autoPeep * vt                 * CMH2O_TO_JOULE;
+  const intrinsic = autoPeep * vt                        * CMH2O_TO_JOULE;
 
   const perBreath  = elastic + resistive + intrinsic;
   const perMinute  = perBreath * fHz * 60;
@@ -117,51 +128,181 @@ export function calcWOB(
   return { elastic, resistive, intrinsic, perBreath, perMinute };
 }
 
-// ─── Longbescherming ──────────────────────────────────────────────────────────
+// ─── Drukgecontroleerde ademteug ─────────────────────────────────────────────
+
+/** Tijdconstante waarmee de druk na het openen van de expiratieklep naar PEEP zakt (s). */
+export const EXP_VALVE_TAU = 0.02;
 
 /**
- * Piekdruk boven PEEP_tot per liter VT bij sinusoïdale inspiratie.
+ * Vorm van de stationaire drukgecontroleerde ademteug per 1 cmH₂O inspiratiedruk.
  *
- *   P(θ) − PEEP_tot = VT/(2C)·(1 − cos θ) + R·π·f·VT·sin θ,  θ ∈ [0, π]
- *   max = VT · [1/(2C) + √(1/(4C²) + (R·π·f)²)]
+ * Luchtwegdruk boven PEEP, u(t):
+ *   inspiratie  u = A·(1 − e^(−t/τr))          τr = P-ramp / 3 (95% na de P-ramp)
+ *   expiratie   u = A·B·e^(−s/τv)              B = 1 − e^(−Ti/τr), τv = klepafname
+ * Long: τ·dV/dt + V = C·u, met V boven FRC bij PEEP.
  *
- * Elastische en resistieve piek vallen niet samen, dus dit is lager dan
- * VT/C + R·π·f·VT.
+ * Exacte oplossing voor exponentiële ingangen:
+ *   inspiratie  V(t) = C·A + K·e^(−t/τr) + (V₀ − C·A − K)·e^(−t/τ),   K  = −C·A·τr/(τr − τ)
+ *   expiratie   V(s) = K₂·e^(−s/τv) + (V₁ − K₂)·e^(−s/τ),           K₂ = C·A·B·τv/(τv − τ)
+ * Stationair: V aan het eind van de expiratie = V₀. Alles is lineair in A.
  */
-function peakPressurePerLitre(C: number, R: number, fHz: number): number {
-  const e = 1 / (2 * C);
-  const r = R * Math.PI * fHz;
-  return e + Math.sqrt(e * e + r * r);
+function breathShape(params: VentilatorParams, fHz: number) {
+  const C   = calcCompliance(params);
+  const tau = calcTau(params);
+  const T   = 1 / fHz;
+  const ti  = T / (1 + IE_RATIO);
+  const te  = T - ti;
+  // Voorkom deling door nul als een ingangsconstante toevallig gelijk is aan τ.
+  const distinct = (t: number) => (Math.abs(t - tau) < 1e-9 ? t * (1 + 1e-6) + 1e-9 : t);
+  const tauR = distinct(Math.max(params.pRamp / 1000 / 3, 1e-6));
+  const tauV = distinct(EXP_VALVE_TAU);
+
+  const K  = (-C * tauR) / (tauR - tau);
+  const x  = Math.exp(-ti / tau);
+  const a  = C + K * Math.exp(-ti / tauR) - (C + K) * x; // V₁ = a + x·V₀
+  const B  = 1 - Math.exp(-ti / tauR);
+  const K2 = (C * B * tauV) / (tauV - tau);
+  const y  = Math.exp(-te / tau);
+  const b  = K2 * Math.exp(-te / tauV) - K2 * y;           // V_eind = b + y·V₁
+
+  const v0 = (b + y * a) / (1 - x * y);
+  const v1 = a + x * v0;
+
+  // Door de klepafname stroomt er na Ti nog kort lucht in: het piekvolume ligt waar
+  // dV/ds = 0, oftewel e^(s·(1/τ − 1/τv)) = −(V₁ − K₂)·τv / (K₂·τ).
+  let vMax = v1;
+  const r = (-(v1 - K2) * tauV) / (K2 * tau);
+  if (r > 0) {
+    const sPeak = Math.log(r) / (1 / tau - 1 / tauV);
+    if (sPeak > 0 && sPeak < te) {
+      vMax = K2 * Math.exp(-sPeak / tauV) + (v1 - K2) * Math.exp(-sPeak / tau);
+    }
+  }
+
+  return { C, tau, ti, te, tauR, tauV, K, B, K2, v0, v1, vMax };
 }
+
+/**
+ * Stationaire drukgecontroleerde ademteug (zie breathShape) voor een gegeven VT.
+ * VT is piekvolume min eind-expiratoir volume (zoals de ventilator meet), dus
+ * ΔPinsp = VT / (V_max − V₀) per cmH₂O; PEEPi = V₀ / C.
+ *
+ * Gemeten PEEPi (expiratoire hold) boven de modelvoorspelling wordt toegeschreven aan
+ * expiratoire flowbeperking, die het lineaire model niet bevat. Dat deel verhoogt de
+ * alveolaire basisdruk: de inspiratiedruk moet het eerst overwinnen voordat er flow is,
+ * dus Pinsp stijgt met dat deel (en daarmee de inspiratoire energie).
+ */
+export function calcBreath(params: VentilatorParams, fHz: number, vt: number): BreathResult {
+  const s = breathShape(params, fHz);
+  const deltaPinsp    = vt / (s.vMax - s.v0);
+  const trappedVolume = s.v0 * deltaPinsp;
+  const autoPeepModel = trappedVolume / s.C;
+  const flowLimitedPeep = Math.max(0, params.peepiMeasured - autoPeepModel);
+
+  // Inspiratoire energie ∫Paw·dV = PEEP·VT + ∫u·dV, met dV/dt = c1·e^(−t/τr) + c2·e^(−t/τ)
+  const c1 = -s.K / s.tauR;
+  const c2 = -(s.v0 - s.C - s.K) / s.tau;
+  const I  = (rate: number) => (1 - Math.exp(-rate * s.ti)) / rate;
+  const uDvPerUnit =
+    c1 * I(1 / s.tauR) + c2 * I(1 / s.tau) - c1 * I(2 / s.tauR) - c2 * I(1 / s.tauR + 1 / s.tau);
+
+  return {
+    ti: s.ti,
+    te: s.te,
+    deltaPinsp,
+    pinsp: params.peep + flowLimitedPeep + deltaPinsp,
+    trappedVolume,
+    autoPeep: autoPeepModel + flowLimitedPeep,
+    autoPeepModel,
+    flowLimitedPeep,
+    // Paw = PEEP + (ΔPinsp + flowbeperkt deel)·u, dus ∫Paw·dV = PEEP·VT + (ΔPinsp + e)·ΔPinsp·∫u·dV₁
+    inspEnergy: params.peep * vt + (deltaPinsp + flowLimitedPeep) * deltaPinsp * uDvPerUnit,
+  };
+}
+
+// ─── Longbescherming ──────────────────────────────────────────────────────────
 
 export function calcLungProtection(
   params: VentilatorParams,
   fHz: number,
   vt: number
 ): LungProtectionResult {
-  const C          = calcCompliance(params);
-  const totalPeep  = params.peep + params.autoPeep;
+  const C      = calcCompliance(params);
+  const breath = calcBreath(params, fHz, vt);
+  const totalPeep = params.peep + breath.autoPeep;
 
   const drivingPressure = vt / C;
-  const peakPressure    = totalPeep + vt * peakPressurePerLitre(C, params.resistance, fHz);
+  const peakPressure    = breath.pinsp;
   const platPressure    = totalPeep + drivingPressure;
   const vtPerKg         = (vt * 1000) / params.ibw;
 
-  // Mechanisch vermogen (Gattinoni 2016, volledige vergelijking) toegepast op
-  // het sinusoïdale profiel: energie per inspiratie = ∫P dV
-  //   = VT²/(2C) + π²·R·f·VT²/4 + PEEP_tot·VT
-  const energyPerBreath =
-    vt ** 2 / (2 * C) + (PI2 * params.resistance * fHz * vt ** 2) / 4 + totalPeep * vt;
-  const mechPower = CMH2O_TO_JOULE * fHz * 60 * energyPerBreath;
+  // Mechanisch vermogen (Gattinoni 2016): energie per inspiratie = ∫Paw·dV.
+  const mechPower = CMH2O_TO_JOULE * fHz * 60 * breath.inspEnergy;
 
-  return { drivingPressure, peakPressure, platPressure, vtPerKg, mechPower, totalPeep };
+  return {
+    drivingPressure,
+    peakPressure,
+    platPressure,
+    autoPeep: breath.autoPeep,
+    vtPerKg,
+    mechPower,
+    totalPeep,
+  };
+}
+
+/** Lineaire score: 100 tot `good`, 50 op de grens, 0 vanaf `bad`. */
+function bandScore(v: number, good: number, limit: number, bad: number): number {
+  if (v <= good) return 100;
+  if (v <= limit) return 100 - 50 * ((v - good) / (limit - good));
+  if (v >= bad) return 0;
+  return 50 - 50 * ((v - limit) / (bad - limit));
+}
+
+/** Longbeschermingsscores per maat; een waarde precies op de grens scoort 50. */
+export function calcProtectionScores(
+  params: VentilatorParams,
+  prot: LungProtectionResult
+): ProtectionScore[] {
+  const p = params.pLimit;
+  return [
+    {
+      key: "dp", label: "Driving pressure",
+      score: bandScore(prot.drivingPressure, 10, LIMITS.drivingPressure, 20),
+      value: `${prot.drivingPressure.toFixed(1)} cmH₂O`, limit: `≤ ${LIMITS.drivingPressure}`,
+    },
+    {
+      key: "pplat", label: "Plateaudruk",
+      score: bandScore(prot.platPressure, 25, LIMITS.platPressure, 35),
+      value: `${prot.platPressure.toFixed(1)} cmH₂O`, limit: `≤ ${LIMITS.platPressure}`,
+    },
+    {
+      key: "pinsp", label: "Pinsp",
+      score: bandScore(prot.peakPressure, p - 10, p, p + 5),
+      value: `${prot.peakPressure.toFixed(1)} cmH₂O`, limit: `≤ ${p}`,
+    },
+    {
+      key: "vtkg", label: "VT/kg",
+      score: bandScore(prot.vtPerKg, 6, LIMITS.vtPerKg, 10),
+      value: `${prot.vtPerKg.toFixed(1)} mL/kg`, limit: `≤ ${LIMITS.vtPerKg}`,
+    },
+    {
+      key: "mp", label: "Mech. vermogen",
+      score: bandScore(prot.mechPower, 10, LIMITS.mechPower, 25),
+      value: `${prot.mechPower.toFixed(1)} J/min`, limit: `≤ ${LIMITS.mechPower}`,
+    },
+    {
+      key: "peepi", label: "Auto-PEEP",
+      score: bandScore(prot.autoPeep, 1, LIMITS.autoPeep, 10),
+      value: `${prot.autoPeep.toFixed(1)} cmH₂O`, limit: `≤ ${LIMITS.autoPeep}`,
+    },
+  ];
 }
 
 // ─── iASV beslissingsalgoritme ────────────────────────────────────────────────
 
 interface Constraint {
   label: string;
-  ok: (fBpm: number, vt: number) => boolean;
+  ok: (fBpm: number, vt: number, prot: LungProtectionResult) => boolean;
 }
 
 /** Frequentievenster volgens de ASV-regels (bpm). */
@@ -173,9 +314,7 @@ export function calcFrequencyWindow(params: VentilatorParams): { fMinBpm: number
 }
 
 function buildConstraints(params: VentilatorParams): Constraint[] {
-  const C         = calcCompliance(params);
-  const vd        = calcDeadSpace(params);
-  const totalPeep = params.peep + params.autoPeep;
+  const vd = calcDeadSpace(params);
   const { fMinBpm, fMaxBpm } = calcFrequencyWindow(params);
   const eps = 1e-9;
 
@@ -183,22 +322,18 @@ function buildConstraints(params: VentilatorParams): Constraint[] {
     { label: `Minimale frequentie (${ASV_F_MIN_BPM}/min)`, ok: (f) => f >= fMinBpm - eps },
     { label: "Maximale frequentie (20/τ — auto-PEEP-preventie)", ok: (f) => f <= fMaxBpm + eps },
     { label: "Minimaal VT (2 × VD)", ok: (_, vt) => vt >= 2 * vd - eps },
-    {
-      label: "Druk limiet (Ppeak)",
-      ok: (f, vt) =>
-        totalPeep + vt * peakPressurePerLitre(C, params.resistance, f / 60) <= params.pLimit + eps,
-    },
+    { label: "Druk limiet (Pinsp)", ok: (_, __, p) => p.peakPressure <= params.pLimit + eps },
     {
       label: `Driving pressure (ΔP ≤ ${LIMITS.drivingPressure})`,
-      ok: (_, vt) => vt / C <= LIMITS.drivingPressure + eps,
+      ok: (_, __, p) => p.drivingPressure <= LIMITS.drivingPressure + eps,
     },
     {
       label: `Plateaudruk (≤ ${LIMITS.platPressure} cmH₂O)`,
-      ok: (_, vt) => totalPeep + vt / C <= LIMITS.platPressure + eps,
+      ok: (_, __, p) => p.platPressure <= LIMITS.platPressure + eps,
     },
     {
       label: `VT/kg-grens (${LIMITS.vtPerKg} mL/kg)`,
-      ok: (_, vt) => (vt * 1000) / params.ibw <= LIMITS.vtPerKg + eps,
+      ok: (_, __, p) => p.vtPerKg <= LIMITS.vtPerKg + eps,
     },
   ];
 }
@@ -210,8 +345,8 @@ function buildConstraints(params: VentilatorParams): Constraint[] {
  *  3. Kies het toegestane punt met f het dichtst bij f_Otis (V̇A blijft gelijk)
  *  4. Rapporteer welke limiet de verschuiving veroorzaakt
  *
- * Langs de hyperbool hangen alle limieten van f af (Ppeak via VT én f), dus
- * de grens wordt gezamenlijk opgelost in plaats van alleen VT af te kappen.
+ * Langs de hyperbool hangen alle limieten van f af (Pinsp en auto-PEEP via VT én f),
+ * dus de grens wordt gezamenlijk opgelost in plaats van alleen VT af te kappen.
  */
 export function calcIASV(params: VentilatorParams): iASVDecision {
   const otis      = calcOtis(params);
@@ -221,8 +356,11 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
   const constraints = buildConstraints(params);
 
   const vtAt = (fBpm: number) => VA_s / (fBpm / 60) + vd;
-  const failing = (fBpm: number) =>
-    constraints.filter((c) => !c.ok(fBpm, vtAt(fBpm))).map((c) => c.label);
+  const failing = (fBpm: number) => {
+    const vt = vtAt(fBpm);
+    const prot = calcLungProtection(params, fBpm / 60, vt);
+    return constraints.filter((c) => !c.ok(fBpm, vt, prot)).map((c) => c.label);
+  };
   const feasibleAt = (fBpm: number) => failing(fBpm).length === 0;
 
   const fOtis = otis.fOptBpm;
@@ -267,18 +405,23 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
   const wobActual  = calcWOB(params, fActualHz, vtActual);
   const wobOtis    = calcWOB(params, otis.fOptHz, otis.vtOpt);
 
+  // ── Gemeten teug bij eigen ademactiviteit ─────────────────────────────────
+  // ASV vult aan tot de doelfrequentie met verplichte teugen. Ademt de patiënt sneller,
+  // dan zijn alle teugen spontaan en houdt ASV het minuutvolume vast: VT = V̇E / f.
+  // Het gemeten punt schuift dan over de V̇E-hyperbool en V̇A daalt (meer dode-ruimteventilatie).
+  const minuteVolume = vtActual * fChosen;
+  const spontaneous  = params.fSpont > fChosen;
+  const fMeasured    = spontaneous ? params.fSpont : fChosen;
+  const vtMeasured   = minuteVolume / fMeasured;
+
   // WOB-score: hoe dicht bij het theoretische minimum?
   const wobScore = Math.max(0, Math.min(100,
     100 - ((wobActual.perMinute - wobOtis.perMinute) / Math.max(wobOtis.perMinute, 0.001)) * 100
   ));
 
-  // Longbescherming-score: penaliseer overschrijding limieten
-  let protScore = 100;
-  if (prot.drivingPressure > LIMITS.drivingPressure) protScore -= (prot.drivingPressure - LIMITS.drivingPressure) * 5;
-  if (prot.peakPressure > params.pLimit) protScore -= (prot.peakPressure - params.pLimit) * 5;
-  if (prot.vtPerKg > LIMITS.vtPerKg) protScore -= (prot.vtPerKg - LIMITS.vtPerKg) * 10;
-  if (prot.mechPower > LIMITS.mechPower) protScore -= (prot.mechPower - LIMITS.mechPower) * 2;
-  protScore = Math.max(0, Math.min(100, protScore));
+  // Longbescherming-score: gemiddelde van de afzonderlijke maten (zelfde als de radar)
+  const scores    = calcProtectionScores(params, prot);
+  const protScore = scores.reduce((sum, x) => sum + x.score, 0) / scores.length;
 
   return {
     fOtis:           otis.fOptBpm,
@@ -293,6 +436,15 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
     vtMin:           2 * vd,
     protectionScore: protScore,
     wobScore,
+    minuteVolume,
+    measured: {
+      spontaneous,
+      fBpm: fMeasured,
+      vt: vtMeasured,
+      mandatoryBpm: Math.max(0, fChosen - params.fSpont),
+      minuteVolume,
+      alveolarVentilation: (vtMeasured - vd) * fMeasured,
+    },
   };
 }
 
@@ -326,11 +478,11 @@ export function calcVtHyperbolaAtF(params: VentilatorParams, fBpm: number): numb
   return VA_s / (fBpm / 60) + vd;
 }
 
-/** VT op de druk-limietlijn bij gegeven f (bpm). */
+/** VT op de druk-limietlijn bij gegeven f (bpm): het VT waarbij Pinsp = Plimit. */
 export function calcVtPressureLimitAtF(params: VentilatorParams, fBpm: number): number {
-  const C = calcCompliance(params);
-  const totalPeep = params.peep + params.autoPeep;
-  return (params.pLimit - totalPeep) / peakPressurePerLitre(C, params.resistance, fBpm / 60);
+  // ΔPinsp is lineair in VT, dus VT_max = (Plimit − PEEP) / (ΔPinsp per liter)
+  const perLitre = calcBreath(params, fBpm / 60, 1).deltaPinsp;
+  return (params.pLimit - params.peep) / perLitre;
 }
 
 /**
@@ -349,7 +501,7 @@ export function generateVentilationHyperbola(
 
 /**
  * Genereert de druk-limietlijn in het (f, VT)-vlak.
- * VT_max(f) = (Plimit − PEEP_tot) / [1/(2C) + √(1/(4C²) + (R·π·f)²)]
+ * VT_max(f) = (Plimit − PEEP) · C·(1 − x)·(1 − y) / (1 − x·y)
  */
 export function generatePressureLimitLine(
   params: VentilatorParams
@@ -363,75 +515,85 @@ export function generatePressureLimitLine(
 }
 
 /**
- * Genereert punten voor de gesimuleerde PV-lus
+ * Dynamische druk-volumelus van de drukgecontroleerde ademteug, afgeleid uit één cyclus
+ * van de tijdcurven (met P-ramp en klepafname, dus met afgeronde hoeken).
+ *  - loop: luchtwegdruk Paw tegen ventilatorvolume (0..VT)
+ *  - alveolar: alveolaire druk Palv = PEEP_tot + V/C (statische lijn)
+ * Het oppervlak tussen beide is de resistieve energie.
  */
 export function generatePVLoop(
   params: VentilatorParams,
   fHz: number,
   vt: number
-): { p: number; v: number }[] {
-  const C        = calcCompliance(params);
-  const totalPeep = params.peep + params.autoPeep;
-  const steps    = 80;
-  const result   = [];
+): { loop: { p: number; v: number }[]; alveolar: { p: number; v: number }[] } {
+  const C      = calcCompliance(params);
+  const breath = calcBreath(params, fHz, vt);
+  const totalPeep = params.peep + breath.autoPeep;
 
-  // Inspiratie (0 → VT), sinusoïdaal
-  for (let i = 0; i <= steps; i++) {
-    const t   = i / steps; // 0..1
-    const v   = vt * (1 - Math.cos(Math.PI * t)) / 2; // 0 → VT
-    const flow = Math.PI * fHz * vt * Math.sin(Math.PI * t); // sinusoïdaal
-    const p   = totalPeep + v / C + params.resistance * flow;
-    result.push({ p, v: v * 1000 }); // v in mL
-  }
-  // Expiratie (VT → 0)
-  for (let i = steps; i >= 0; i--) {
-    const t    = i / steps;
-    const v    = vt * (1 - Math.cos(Math.PI * t)) / 2;
-    const flow = -Math.PI * fHz * vt * Math.sin(Math.PI * t) * 0.7; // passieve expiratie
-    const p    = totalPeep + v / C + params.resistance * flow;
-    result.push({ p, v: v * 1000 });
-  }
-  return result;
+  return {
+    loop: generateTimeCurves(params, fHz, vt, 1, 400).map((pt) => ({ p: pt.paw, v: pt.volume })),
+    alveolar: [
+      { p: totalPeep,          v: 0 },
+      { p: totalPeep + vt / C, v: vt * 1000 },
+    ],
+  };
 }
 
 /**
- * Genereert flow-tijd en druk-tijd curven voor één ademcyclus
+ * Druk-, flow- en volumecurven van de drukgecontroleerde ademteug (stationair),
+ * met de exacte oplossing uit breathShape geschaald naar de benodigde ΔPinsp (= A).
+ *
+ *   inspiratie: Paw = PEEP + (A + e)·(1 − e^(−t/τr))
+ *   expiratie:  Paw = PEEP + (A + e)·B·e^(−s/τv)
+ *   Palv = PEEP + e + V/C,  flow = dV/dt
+ * met e de flowbeperkte PEEPi (gemeten boven model). Flowbeperking zelf zit niet
+ * in de flowcurve; alleen de verhoogde alveolaire basisdruk.
+ *
+ * Volume is ventilatorvolume: V − V₀ (0 aan begin inspiratie).
  */
 export function generateTimeCurves(
   params: VentilatorParams,
   fHz: number,
-  vt: number
-): { t: number; flow: number; pressure: number; volume: number }[] {
-  const C         = calcCompliance(params);
-  const totalPeep = params.peep + params.autoPeep;
-  const T         = 1 / fHz; // periode (s)
-  const steps     = 100;
-  const result    = [];
+  vt: number,
+  cycles = 2,
+  stepsPerCycle = 240
+): { t: number; flow: number; paw: number; palv: number; volume: number }[] {
+  const s = breathShape(params, fHz);
+  const A = vt / (s.vMax - s.v0); // ΔPinsp
+  const e = calcBreath(params, fHz, vt).flowLimitedPeep;
+  const T = 1 / fHz;
+  const result = [];
 
-  for (let i = 0; i <= steps; i++) {
-    const frac  = i / steps;
-    const t     = frac * T;
-    const phase = frac * 2 * Math.PI;
-    const peakFlow = Math.PI * fHz * vt;
+  for (let i = 0; i <= cycles * stepsPerCycle; i++) {
+    const t  = (i / stepsPerCycle) * T;
+    // Tijd binnen de cyclus; het laatste punt is het einde van de laatste expiratie.
+    const tc = i === cycles * stepsPerCycle ? T : t - Math.floor(i / stepsPerCycle) * T;
+    let v: number, flow: number, u: number;
 
-    // Inspiratie 0..π, Expiratie π..2π
-    const flow = frac < 0.5
-      ? peakFlow * Math.sin(phase)
-      : (() => {
-          const u = (frac - 0.5) * 2; // 0..1 in expiratie
-          const smoothstep = u * u * (3 - 2 * u);
-          const expScale = 1 - 0.3 * smoothstep; // 1.0 -> 0.7
-          return -peakFlow * expScale * Math.sin(Math.PI * u);
-        })();
+    if (tc < s.ti) {
+      const er = Math.exp(-tc / s.tauR);
+      const e  = Math.exp(-tc / s.tau);
+      const h  = s.v0 - s.C - s.K;
+      v    = s.C + s.K * er + h * e;
+      flow = (-s.K / s.tauR) * er - (h / s.tau) * e;
+      u    = 1 - er;
+    } else {
+      const ts = tc - s.ti;
+      const ev = Math.exp(-ts / s.tauV);
+      const e  = Math.exp(-ts / s.tau);
+      const h  = s.v1 - s.K2;
+      v    = s.K2 * ev + h * e;
+      flow = (-s.K2 / s.tauV) * ev - (h / s.tau) * e;
+      u    = s.B * ev;
+    }
 
-    // Keep volume continuous at the insp→exp transition to avoid a visible kink.
-    const volume = frac < 0.5
-      ? vt * (1 - Math.cos(phase)) / 2
-      : vt * (1 + Math.cos(phase - Math.PI)) / 2;
-
-    const pressure = totalPeep + Math.max(volume, 0) / C + params.resistance * flow;
-
-    result.push({ t, flow, pressure, volume: volume * 1000 }); // volume in mL
+    result.push({
+      t,
+      flow: A * flow * 60,              // L/min
+      paw: params.peep + (A + e) * u,
+      palv: params.peep + e + (A * v) / s.C,
+      volume: A * (v - s.v0) * 1000,    // mL
+    });
   }
   return result;
 }

@@ -50,6 +50,29 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid #0369a1;
 }
 
+/* Grotere bedieningselementen op touchscreens */
+@media (pointer: coarse) {
+  input[type="range"] {
+    height: 8px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* Horizontaal scrollbare balk zonder zichtbare scrollbalk */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #0f172a; }

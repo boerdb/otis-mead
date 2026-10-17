@@ -79,9 +79,9 @@ const workRows = [
 ];
 
 const scenarioRows = [
-  { name: "Geventileerd, gezonde longen", mech: "C 60, R 8 → τ 0.48 s", otis: "14.9 /min · 489 mL", iasv: "Otis-optimum binnen alle limieten" },
-  { name: "ARDS", mech: "C 30, R 12, PEEP 10 → τ 0.36 s", otis: "16.4 /min · 458 mL", iasv: "16.9 /min · 450 mL (ΔP ≤ 15 begrenst)" },
-  { name: "COPD", mech: "C 60, R 25, PEEPi 4 → τ 1.50 s", otis: "9.6 /min · 674 mL", iasv: "12.3 /min · 560 mL (8 mL/kg begrenst; f_max = 13.3)" },
+  { name: "Geventileerd, gezonde longen", mech: "C 60, R 8, PEEP 5 → τ 0.48 s", otis: "14.9 /min · 489 mL", iasv: "Otis-optimum binnen alle limieten · Pinsp 13.7 · PEEPi 0.0" },
+  { name: "ARDS", mech: "C 30, R 12, PEEP 10 → τ 0.36 s", otis: "16.4 /min · 458 mL", iasv: "16.9 /min · 450 mL (ΔP ≤ 15 begrenst) · Pinsp 25.6 · MP 18.8 J/min" },
+  { name: "COPD", mech: "C 60, R 25, PEEP 5 → τ 1.50 s", otis: "9.6 /min · 674 mL", iasv: "12.3 /min · 560 mL (8 mL/kg begrenst; f_max = 13.3) · PEEPi 1.2" },
 ];
 
 const iasvSteps = [
@@ -132,11 +132,11 @@ export default function TheoryIASVPage() {
   return (
     <div className="iasv-print-page min-h-screen bg-gray-950 text-gray-100">
       <header className="iasv-screen-header border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <h1 className="text-sm md:text-base font-semibold tracking-wide text-sky-300">
-            iASV-theoriecentrum — uitgebreide referentie
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+          <h1 className="min-w-0 truncate text-sm md:text-base font-semibold tracking-wide text-sky-300">
+            iASV-theoriecentrum<span className="hidden sm:inline"> — uitgebreide referentie</span>
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <PrintTheoryButton />
             <Link
               href="/"
@@ -148,8 +148,8 @@ export default function TheoryIASVPage() {
         </div>
       </header>
 
-      <main className="iasv-print-main max-w-6xl mx-auto px-6 py-8 space-y-8">
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+      <main className="iasv-print-main max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Inleiding: ASV en iASV</h2>
           <p className="text-sm text-gray-300 leading-7">
             Adaptive Support Ventilation (ASV) is een modus van Hamilton Medical waarin de clinicus een doelminuutvolume instelt en de ventilator zelf de combinatie van frequentie en teugvolume kiest<Ref n={4} />. Die keuze is gebaseerd op het werk van Otis, Fenn en Rahn uit 1950: bij een gegeven alveolaire ventilatie bestaat een frequentie waarbij de ademarbeid minimaal is<Ref n={1} />. ASV meet de longmechanica per ademteug, berekent dat optimum en legt het binnen een venster van veiligheidsregels.
@@ -163,7 +163,9 @@ export default function TheoryIASVPage() {
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <h3 className="text-base font-semibold text-sky-300 mb-2">Wat de simulator wel en niet doet</h3>
             <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300 leading-6">
-              <li>De simulator gebruikt een longmodel met één compartiment, lineaire R en C, en sinusoïdale flow (de aanname van Otis). Een echte ASV-ademteug is drukgecontroleerd, met een afnemende flow.</li>
+              <li>De simulator gebruikt een longmodel met één compartiment en lineaire R en C. Het doel (f_opt, VT_opt) volgt uit de Otis-vergelijking met sinusoïdale flow, zoals in ASV.</li>
+              <li>De ademteug zelf wordt afgegeven zoals bij ASV: drukgecontroleerd met een instelbare drukstijgtijd (P-ramp, standaard 50 ms), I:E 1:2, een korte drukafname bij het openen van de expiratieklep en passieve expiratie. Het model is exact opgelost (exponentiële ingangen), niet benaderd. Pinsp, plateaudruk, auto-PEEP en mechanisch vermogen volgen uit dat model; auto-PEEP is dus een uitkomst van τ en de expiratietijd, geen invoer. Expiratoire flowbeperking (zoals bij COPD) zit niet in het lineaire model, waardoor auto-PEEP daar wordt onderschat. Daarom kun je een gemeten PEEPi (expiratoire hold) invoeren: ligt die boven de modelvoorspelling, dan rekent de simulator met de gemeten waarde en verhoogt het verschil de alveolaire basisdruk, Pplat en de benodigde Pinsp.</li>
+              <li>Met &quot;eigen ademfrequentie&quot; simuleer je een actieve patiënt. Ademt die langzamer dan het doel, dan vult ASV aan met verplichte teugen en blijft het werkpunt op het doel. Ademt die sneller, dan zijn alle teugen spontaan en houdt ASV het minuutvolume vast: het gemeten punt schuift over de V̇E-hyperbool (VT = V̇E/f) en de alveolaire ventilatie daalt. De inspanning van de patiënt (Pmus) en de exacte regeling van de drukondersteuning worden niet gemodelleerd.</li>
               <li>Als invoer gebruikt de simulator de alveolaire ventilatie V̇A. ASV werkt met een doelminuutvolume, waaruit V̇A = V̇E − f·VD volgt. De PetCO₂- en SpO₂-regelkringen van iASV worden niet gesimuleerd.</li>
               <li>De grenzen ΔP ≤ 15 cmH₂O, Pplat ≤ 30 cmH₂O en VT ≤ 8 mL/kg zijn didactische longbeschermende grenzen en geen Hamilton-instellingen. Het frequentievenster en het minimale VT volgen de ASV-regels.</li>
             </ul>
@@ -171,7 +173,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* HISTORISCHE CONTEXT */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Historische achtergrond</h2>
           <div className="space-y-4">
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -206,10 +208,10 @@ export default function TheoryIASVPage() {
           </div>
         </section>
 
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Symbolen, eenheden en definities</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-xs md:text-sm">
+            <table className="min-w-[560px] w-full text-xs md:text-sm">
               <thead>
                 <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-800">
                   <th className="py-2 px-3 font-semibold">Symbool</th>
@@ -231,7 +233,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* OTIS SECTIE */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Het Otis-optimum: frequentie en teugvolume</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -284,9 +286,9 @@ export default function TheoryIASVPage() {
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <h3 className="text-base font-semibold text-yellow-300 mb-2">Voorbeelden uit de simulator</h3>
-            <p className="text-xs text-gray-400 mb-2">V̇A 5 L/min, IBW 70 kg (VD 154 mL), druklimiet 30 cmH₂O. C in mL/cmH₂O, R in cmH₂O·s/L.</p>
+            <p className="text-xs text-gray-400 mb-2">V̇A 5 L/min, IBW 70 kg (VD 154 mL), druklimiet 30 cmH₂O, P-ramp 50 ms. C in mL/cmH₂O, R in cmH₂O·s/L, drukken in cmH₂O. Deze scenario&apos;s staan ook als knop in de simulator.</p>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-xs md:text-sm">
+              <table className="min-w-[640px] w-full text-xs md:text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700">
                     <th className="py-2 pr-3 font-semibold">Scenario</th>
@@ -311,7 +313,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* COMPONENTEN VAN ADEMARBEID */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Componenten van ademarbeid</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -361,7 +363,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* IASV BESLISLOGICA */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Het ASV-algoritme: van theorie naar beademing</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -382,7 +384,7 @@ export default function TheoryIASVPage() {
             <div className="space-y-3 text-sm">
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                 <p className="text-pink-300 font-mono mb-1">f ≤ 20 / RCexp</p>
-                <p className="text-gray-300 text-xs leading-6">Laat minstens 1τ inspiratietijd en 2τ expiratietijd over, om dynamische hyperinflatie (auto-PEEP) te beperken. In de simulator geldt daarnaast 5 ≤ f ≤ 60/min.</p>
+                <p className="text-gray-300 text-xs leading-6">Laat minstens 1τ inspiratietijd en 2τ expiratietijd over, om dynamische hyperinflatie (auto-PEEP) te beperken. Bij f = 20/τ en I:E 1:2 is Te precies 2τ: dan blijft aan het eind van de expiratie e⁻² ≈ 14% van het eind-inspiratoire volume achter. De simulator toont die auto-PEEP. Daarnaast geldt 5 ≤ f ≤ 60/min.</p>
               </div>
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                 <p className="text-pink-300 font-mono mb-1">VT ≥ 2 × VD</p>
@@ -390,7 +392,7 @@ export default function TheoryIASVPage() {
               </div>
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
                 <p className="text-pink-300 font-mono mb-1">Pinsp ≤ drukgrens</p>
-                <p className="text-gray-300 text-xs leading-6">ASV houdt de inspiratiedruk onder een marge van de ingestelde maximale druk. In het sinusoïdale model van de simulator geldt: Ppeak = PEEP_tot + VT·[1/(2C) + √(1/(4C²) + (π·R·f)²)].</p>
+                <p className="text-gray-300 text-xs leading-6">ASV houdt de inspiratiedruk onder een marge van de ingestelde maximale druk. In de simulator geldt voor de stationaire drukgecontroleerde teug bij blokdruk: Pinsp = PEEP + VT·(1 − x·y) / [C·(1 − x)·(1 − y)], met x = e^(−Ti/τ) en y = e^(−Te/τ). Hoe korter Ti ten opzichte van τ, en hoe langer de P-ramp, hoe meer druk nodig is voor hetzelfde VT.</p>
               </div>
             </div>
           </div>
@@ -434,7 +436,7 @@ export default function TheoryIASVPage() {
           </div>
         </section>
 
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Samenvatting</h2>
           <p className="text-sm text-gray-300 leading-7">
             ASV is geen black box. Het is een gecontroleerde optimalisatie: eerst een energetisch optimum op basis van klassieke fysiologie, daarna begrenzing door veiligheidsregels. Verandert de mechanica, dan verschuift het optimum mee; de regels blijven gelden.
@@ -445,7 +447,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* RESPIRATOIRE MECHANICA */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Respiratoire mechanica in de praktijk</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -495,13 +497,13 @@ export default function TheoryIASVPage() {
               <li><span className="text-blue-300 font-semibold">Triggerlast:</span> een spontaan ademende patiënt moet eerst PEEPi overwinnen voordat de ventilator triggert. Dat kan leiden tot ineffectieve triggerpogingen.</li>
               <li><span className="text-blue-300 font-semibold">Hemodynamiek:</span> de hogere intrathoracale druk vermindert de veneuze terugvloed (lagere preload van rechter- en linkerkamer) en kan de afterload van de rechterkamer verhogen. Dit kan leiden tot hypotensie.</li>
               <li><span className="text-blue-300 font-semibold">Hyperinflatie:</span> een hoger eind-expiratoir longvolume verhoogt de plateaudruk en het risico op barotrauma.</li>
-              <li><span className="text-blue-300 font-semibold">Meten:</span> statische PEEPi meet je met een eind-expiratoire occlusie (expiratoire hold) bij een passieve patiënt. Bij spontane ademhaling is een slokdarmdrukmeting nodig.</li>
+              <li><span className="text-blue-300 font-semibold">Meten:</span> statische PEEPi meet je met een eind-expiratoire occlusie (expiratoire hold) bij een passieve patiënt; een inspiratoire hold geeft de plateaudruk. Bij spontane ademhaling is een slokdarmdrukmeting nodig. In de simulator vul je de gemeten waarde in bij &quot;Gemeten PEEPi&quot;.</li>
             </ul>
           </div>
         </section>
 
         {/* GEAVANCEERDE ONDERWERPEN */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Verdieping: heterogeniteit, VILI en stress-strain</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -545,7 +547,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* KLINISCHE ONDERBOUWING */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Klinische onderbouwing</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -585,7 +587,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* PARAMETERVARIATIE */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Hoe patiëntfactoren het werkpunt verschuiven</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -611,7 +613,8 @@ export default function TheoryIASVPage() {
               <h3 className="text-base font-semibold text-teal-300 mb-2">Sedatie en eigen ademactiviteit</h3>
               <ul className="space-y-1 text-sm text-gray-300">
                 <li>Passieve patiënt: ASV levert drukgecontroleerde teugen met de doelfrequentie.</li>
-                <li>Actieve patiënt: spontane teugen worden drukondersteund. Ademt de patiënt boven de doelfrequentie, dan levert ASV geen verplichte teugen en stuurt ze alleen de drukondersteuning bij.</li>
+                <li>Actieve patiënt: spontane teugen worden drukondersteund. Ademt de patiënt boven de doelfrequentie, dan levert ASV geen verplichte teugen en stuurt ze alleen de drukondersteuning bij. Het doelminuutvolume blijft leidend, dus bij een hogere eigen frequentie daalt het VT.</li>
+                <li>Gevolg: snel en ondiep ademen bij gelijk minuutvolume verlaagt de alveolaire ventilatie, omdat elke teug dezelfde dode ruimte heeft. Op het ASV-scherm zie je dat als een gemeten punt dat rechts-onder het doel op de minuutvolumecurve ligt.</li>
                 <li>Krachtige eigen inspanning maakt de gemeten mechanica minder betrouwbaar en verhoogt de transpulmonale druk.</li>
               </ul>
             </div>
@@ -646,7 +649,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* BEPERKINGEN */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Beperkingen en bijzondere situaties</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -693,7 +696,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* SLOTOPMERKINGEN */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Slotopmerkingen</h2>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -715,7 +718,7 @@ export default function TheoryIASVPage() {
         </section>
 
         {/* BRONNEN */}
-        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
           <h2 className="text-xl font-semibold text-white">Bronnen</h2>
           <ol className="space-y-2 text-xs md:text-sm text-gray-300 leading-6">
             {references.map((r) => (

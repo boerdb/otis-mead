@@ -35,11 +35,18 @@ const F_MIN = 4;
 const F_MAX = 40;
 const CHART_MARGIN = { top: 15, right: 20, bottom: 30, left: 15 };
 
-type DatasetRow = { f: number; vt_hyp?: number; vt_plimit?: number };
+type DatasetRow = { f: number; vt_hyp?: number; vt_plimit?: number; vt_mv?: number };
+
+/** VT op de minuutvolume-hyperbool VT = V̇E / f (L), of undefined buiten de grafiek. */
+function vtOnMinuteVolume(minuteVolume: number, fBpm: number): number | undefined {
+  const vt = minuteVolume / fBpm;
+  return vt > 0.1 && vt < 2.0 ? vt : undefined;
+}
 
 function buildDataset(
   hyperbola: { f: number; vt: number }[],
-  pLimitLine: { f: number; vt: number }[]
+  pLimitLine: { f: number; vt: number }[],
+  minuteVolume: number | null
 ): DatasetRow[] {
   const map = new Map<number, DatasetRow>();
   for (const p of hyperbola) {
@@ -49,6 +56,9 @@ function buildDataset(
   for (const p of pLimitLine) {
     const key = +p.f.toFixed(1);
     map.set(key, { ...map.get(key), f: key, vt_plimit: p.vt });
+  }
+  if (minuteVolume !== null) {
+    for (const row of map.values()) row.vt_mv = vtOnMinuteVolume(minuteVolume, row.f);
   }
   return Array.from(map.values()).sort((a, b) => a.f - b.f);
 }
@@ -68,11 +78,13 @@ function OtisChartTooltip({
   coordinate,
   chartWidth,
   params,
+  minuteVolume,
 }: {
   active?: boolean;
   coordinate?: Coordinate;
   chartWidth: number;
   params: VentilatorParams;
+  minuteVolume: number | null;
 }) {
   if (!active || !coordinate || chartWidth <= 0) return null;
 
@@ -80,9 +92,11 @@ function OtisChartTooltip({
   const vtHyp = calcVtHyperbolaAtF(params, f);
   const vtPlimit = calcVtPressureLimitAtF(params, f);
 
+  const vtMv = minuteVolume === null ? undefined : vtOnMinuteVolume(minuteVolume, f);
   const entries = [
-    { name: "Druk limiet (Ppeak)", value: vtPlimit, color: "#ef4444" },
+    { name: "Druk limiet (Pinsp)", value: vtPlimit, color: "#ef4444" },
     { name: "V̇A hyperbool", value: vtHyp, color: "#22d3ee" },
+    ...(vtMv === undefined ? [] : [{ name: "V̇E hyperbool", value: vtMv, color: "#38bdf8" }]),
   ];
 
   return (
@@ -119,9 +133,14 @@ export default function OtisWorkspace() {
   const pLimitLine = useMemo(() => generatePressureLimitLine(params), [params]);
   const C          = useMemo(() => calcCompliance(params), [params]);
 
+  // De V̇E-hyperbool is alleen relevant als de patiënt zelf ademt.
+  const showMinuteVolume = params.fSpont > 0;
+  const minuteVolume     = showMinuteVolume ? iasv.minuteVolume : null;
+  const measured         = iasv.measured;
+
   const dataset = useMemo(
-    () => buildDataset(hyperbola, pLimitLine),
-    [hyperbola, pLimitLine]
+    () => buildDataset(hyperbola, pLimitLine, minuteVolume),
+    [hyperbola, pLimitLine, minuteVolume]
   );
 
   const vtKg8       = (params.ibw * 8) / 1000;
@@ -145,24 +164,26 @@ export default function OtisWorkspace() {
         coordinate={props.coordinate}
         chartWidth={chartWidth}
         params={params}
+        minuteVolume={minuteVolume}
       />
     ),
-    [chartWidth, params]
+    [chartWidth, params, minuteVolume]
   );
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
+    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-5">
       <div className="mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
           Otis Workspace — f · V<sub>T</sub> vlak
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">
-          V̇A-hyperbool (cyaan) · Druklimieten (rood) · ★ Otis-optimum (geel) · ● iASV werkpunt (groen)
+          V̇A-hyperbool (cyaan) · Druklimieten (rood) · ◯ Otis-optimum (geel) · ● iASV-doel (groen)
+          {showMinuteVolume && " · V̇E-hyperbool (blauw, gestippeld) · ◎ gemeten teug (blauw)"}
         </p>
       </div>
 
       <div ref={chartWrapRef}>
-        <ResponsiveContainer width="100%" height={380}>
+        <ResponsiveContainer width="100%" height={340}>
           <LineChart
             data={dataset}
             margin={CHART_MARGIN}
@@ -198,9 +219,21 @@ export default function OtisWorkspace() {
               isAnimationActive={false}
               connectNulls={false}
             />
+            {showMinuteVolume && (
+              <Line
+                dataKey="vt_mv"
+                name="V̇E hyperbool (doel-minuutvolume)"
+                stroke="#38bdf8"
+                strokeWidth={1.5}
+                strokeDasharray="2 3"
+                dot={false}
+                isAnimationActive={false}
+                connectNulls={false}
+              />
+            )}
             <Line
               dataKey="vt_plimit"
-              name="Druk limiet (Ppeak)"
+              name="Druk limiet (Pinsp)"
               stroke="#ef4444"
               strokeWidth={1.5}
               strokeDasharray="6 3"
@@ -214,21 +247,22 @@ export default function OtisWorkspace() {
             <ReferenceLine y={vtKg6} stroke="#fbbf24" strokeDasharray="3 4" strokeWidth={1}
               label={{ value: "6 mL/kg", fill: "#fbbf24", fontSize: 9, position: "insideTopRight" }} />
             <ReferenceLine y={iasv.vtMin} stroke="#64748b" strokeDasharray="2 4" strokeWidth={1}
-              label={{ value: "VT min (2·VD)", fill: "#94a3b8", fontSize: 9, position: "insideBottomRight" }} />
+              label={{ value: "VT min (2·VD)", fill: "#94a3b8", fontSize: 9, position: "insideBottomLeft" }} />
             {iasv.fMaxBpm <= F_MAX && (
               <ReferenceLine x={iasv.fMaxBpm} stroke="#64748b" strokeDasharray="2 4" strokeWidth={1}
-                label={{ value: "f max (20/τ)", fill: "#94a3b8", fontSize: 9, position: "insideTopLeft" }} />
+                label={{ value: "f max (20/τ)", fill: "#94a3b8", fontSize: 9, position: "insideTopRight" }} />
             )}
             <ReferenceLine y={vtDriving15} stroke="#a78bfa" strokeDasharray="5 4" strokeWidth={1}
               label={{ value: "ΔP=15", fill: "#a78bfa", fontSize: 10, position: "insideTopLeft" }} />
 
+            {/* Otis als open ring, zodat een samenvallend iASV-doel zichtbaar blijft */}
             <ReferenceDot
               x={otis.fOptBpm}
               y={otis.vtOpt}
-              r={7}
-              fill="#facc15"
-              stroke="#ca8a04"
-              strokeWidth={1}
+              r={10}
+              fill="none"
+              stroke="#facc15"
+              strokeWidth={2}
               ifOverflow="visible"
             />
             <ReferenceDot
@@ -240,14 +274,25 @@ export default function OtisWorkspace() {
               strokeWidth={1}
               ifOverflow="visible"
             />
+            {measured.spontaneous && (
+              <ReferenceDot
+                x={measured.fBpm}
+                y={measured.vt}
+                r={7}
+                fill="#0b1220"
+                stroke="#38bdf8"
+                strokeWidth={3}
+                ifOverflow="visible"
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Samenvatting */}
-      <div className="grid grid-cols-2 gap-3 mt-4">
+      <div className={`grid grid-cols-1 gap-3 mt-4 ${showMinuteVolume ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         <SummaryBox
-          label="★ Otis-optimum"
+          label="◯ Otis-optimum"
           color="yellow"
           items={[
             { k: "f",     v: `${otis.fOptBpm.toFixed(1)} bpm` },
@@ -257,23 +302,45 @@ export default function OtisWorkspace() {
           ]}
         />
         <SummaryBox
-          label="● iASV Werkpunt"
+          label="● iASV-doel"
           color={iasv.constrained ? "orange" : "green"}
           items={[
             { k: "f",  v: `${iasv.fActual.toFixed(1)} bpm` },
             { k: "VT", v: `${(iasv.vtActual * 1000).toFixed(0)} mL` },
+            { k: "V̇E", v: `${iasv.minuteVolume.toFixed(2)} L/min` },
             iasv.constrained
               ? { k: "⚠", v: iasv.limitingFactor }
               : { k: "✓", v: "Otis-optimum veilig" },
           ]}
         />
+        {showMinuteVolume && (
+          <SummaryBox
+            label="◎ Gemeten teug"
+            color="blue"
+            items={[
+              { k: "f",  v: `${measured.fBpm.toFixed(1)} bpm` },
+              { k: "VT", v: `${(measured.vt * 1000).toFixed(0)} mL` },
+              { k: "V̇A", v: `${measured.alveolarVentilation.toFixed(2)} L/min` },
+              measured.spontaneous
+                ? { k: "↻", v: "alle teugen spontaan" }
+                : { k: "↻", v: `${measured.mandatoryBpm.toFixed(1)} verplicht/min` },
+            ]}
+          />
+        )}
       </div>
+      {measured.spontaneous && (
+        <p className="mt-3 text-xs leading-relaxed text-sky-300">
+          De patiënt ademt sneller dan het doel ({params.fSpont}/min tegen {iasv.fActual.toFixed(1)}/min). ASV houdt het minuutvolume van {iasv.minuteVolume.toFixed(2)} L/min vast, dus VT daalt naar {(measured.vt * 1000).toFixed(0)} mL. Omdat elke teug dezelfde dode ruimte heeft, daalt de alveolaire ventilatie van {params.vaTarget.toFixed(2)} naar {measured.alveolarVentilation.toFixed(2)} L/min.
+          {measured.vt < iasv.vtMin && " Het VT ligt nu onder 2 × VD: vooral dode-ruimteventilatie."}
+        </p>
+      )}
     </div>
   );
 }
 
-type Color = "yellow" | "green" | "orange";
+type Color = "yellow" | "green" | "orange" | "blue";
 const colorMap: Record<Color, string> = {
+  blue:   "bg-sky-950/40 border-sky-800/40 text-sky-300",
   yellow: "bg-yellow-950/40 border-yellow-800/40 text-yellow-400",
   green:  "bg-green-950/40 border-green-800/40 text-green-400",
   orange: "bg-orange-950/40 border-orange-800/40 text-orange-400",

@@ -26,7 +26,7 @@ export default function WOBBreakdown() {
     [params, otis]
   );
   const wobIASV = useMemo(
-    () => calcWOB(params, iasv.fActual / 60, iasv.vtActual),
+    () => calcWOB(params, iasv.measured.fBpm / 60, iasv.measured.vt),
     [params, iasv]
   );
 
@@ -38,7 +38,7 @@ export default function WOBBreakdown() {
       "Auto-PEEP": +wobOtis.intrinsic.toFixed(4),
     },
     {
-      name: "iASV Werkpunt",
+      name: iasv.measured.spontaneous ? "Gemeten teug" : "iASV-werkpunt",
       Elastisch:  +wobIASV.elastic.toFixed(4),
       Resistief:  +wobIASV.resistive.toFixed(4),
       "Auto-PEEP": +wobIASV.intrinsic.toFixed(4),
@@ -48,13 +48,13 @@ export default function WOBBreakdown() {
   const fmt = (v: number) => v.toFixed(4);
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-5">
+    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-5">
       <div className="mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
           WOB Verdeling — per minuut (J/min)
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">
-          Elastisch · Resistief · Intrinsiek PEEP-component
+          Otis-criterium (sinusoïdale flow): elastisch · resistief · drempelwerk door auto-PEEP
         </p>
       </div>
 
@@ -90,7 +90,7 @@ export default function WOBBreakdown() {
           color="#facc15"
         />
         <WOBCard
-          label="iASV WOB"
+          label={iasv.measured.spontaneous ? "WOB gemeten teug" : "iASV WOB"}
           perBreath={wobIASV.perBreath}
           perMinute={wobIASV.perMinute}
           color="#4ade80"
