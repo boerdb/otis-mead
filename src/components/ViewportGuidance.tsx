@@ -53,7 +53,7 @@ export default function ViewportGuidance() {
   return (
     <div
       role="status"
-      className="fixed inset-x-3 bottom-3 z-[100] flex items-start gap-3 rounded-xl border border-gray-700 bg-gray-900/95 p-3 shadow-2xl backdrop-blur sm:left-auto sm:right-4 sm:max-w-sm"
+      className="fixed inset-x-3 bottom-3 z-100 flex items-start gap-3 rounded-xl border border-gray-700 bg-gray-900/95 p-3 shadow-2xl backdrop-blur-sm sm:left-auto sm:right-4 sm:max-w-sm"
     >
       <Monitor size={18} className="mt-0.5 shrink-0 text-sky-400" />
       <p className="text-xs leading-relaxed text-gray-300">
@@ -63,7 +63,7 @@ export default function ViewportGuidance() {
         type="button"
         onClick={dismiss}
         aria-label="Melding sluiten"
-        className="-m-1 shrink-0 rounded p-1 text-gray-400 hover:text-white"
+        className="-m-1 shrink-0 rounded-sm p-1 text-gray-400 hover:text-white"
       >
         <X size={16} />
       </button>

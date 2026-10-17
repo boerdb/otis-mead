@@ -131,7 +131,7 @@ function Ref({ n }: { n: number | number[] }) {
 export default function TheoryIASVPage() {
   return (
     <div className="iasv-print-page min-h-screen bg-gray-950 text-gray-100">
-      <header className="iasv-screen-header border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-40">
+      <header className="iasv-screen-header border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <h1 className="min-w-0 truncate text-sm md:text-base font-semibold tracking-wide text-sky-300">
             iASV-theoriecentrum<span className="hidden sm:inline"> — uitgebreide referentie</span>
@@ -254,7 +254,7 @@ export default function TheoryIASVPage() {
           <div className="space-y-3">
             {otisRows.map((item) => (
               <div key={item.formula} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                <p className="text-xs md:text-sm font-mono text-yellow-300 break-words mb-1">{item.formula}</p>
+                <p className="text-xs md:text-sm font-mono text-yellow-300 wrap-break-word mb-1">{item.formula}</p>
                 <p className="text-sm text-gray-300 leading-6">{item.explain}</p>
               </div>
             ))}
@@ -326,7 +326,7 @@ export default function TheoryIASVPage() {
           <div className="space-y-3">
             {workRows.map((item) => (
               <div key={item.formula} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                <p className="text-xs md:text-sm font-mono text-cyan-300 break-words mb-1">{item.formula}</p>
+                <p className="text-xs md:text-sm font-mono text-cyan-300 wrap-break-word mb-1">{item.formula}</p>
                 <p className="text-sm text-gray-300 leading-6">{item.explain}</p>
               </div>
             ))}
@@ -427,7 +427,7 @@ export default function TheoryIASVPage() {
             <p className="text-sm text-gray-300 leading-7 mb-2">
               Stel: V̇A = 4 L/min, VD = 150 mL en f_opt = 15/min (VT_opt ≈ 417 mL). De driving pressure-grens staat maximaal VT = 320 mL toe.
             </p>
-            <p className="text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded">
+            <p className="text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded-sm">
               f = V̇A / (VT − VD) = 4000 mL/min / (320 − 150) mL ≈ 23.5/min
             </p>
             <p className="text-sm text-gray-300 leading-7 mt-2">

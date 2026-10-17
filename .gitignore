@@ -7,3 +7,4 @@ CURRENT
 LOG
 MANIFEST
 __pycache__/
+.claude/

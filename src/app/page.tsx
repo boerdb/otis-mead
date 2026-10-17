@@ -16,7 +16,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-950">
       {/* Top navigation bar */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <Activity size={20} className="text-sky-400 shrink-0" />
           <div className="min-w-0 truncate">
@@ -50,7 +50,7 @@ export default function HomePage() {
       <main className="max-w-[1920px] mx-auto px-3 sm:px-4 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)_360px] gap-5">
 
         {/* ─── Linkerkolom: sliders (blijft in beeld vanaf lg) ──────────────── */}
-        <aside className="space-y-5 lg:row-span-2 xl:row-span-1 lg:sticky lg:top-[4.5rem] lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:pr-1">
+        <aside className="space-y-5 lg:row-span-2 xl:row-span-1 lg:sticky lg:top-18 lg:self-start lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:pr-1">
           <ParameterPanel />
           <FormulaCard />
         </aside>
@@ -159,7 +159,7 @@ function Formula({
   return (
     <div className="bg-gray-800 rounded-xl p-3">
       <p className={`text-xs font-semibold mb-1 ${accentClassName}`}>{title}</p>
-      <p className="text-xs font-mono text-gray-200 bg-gray-900 rounded px-2 py-1 mb-1">{formula}</p>
+      <p className="text-xs font-mono text-gray-200 bg-gray-900 rounded-sm px-2 py-1 mb-1">{formula}</p>
       <p className="text-xs text-gray-500">{note}</p>
     </div>
   );

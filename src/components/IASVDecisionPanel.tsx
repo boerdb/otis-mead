@@ -121,7 +121,7 @@ export default function IASVDecisionPanel() {
             <div className="min-w-0">
               <p className="text-sm font-medium text-gray-200">{step.label}</p>
               <p className="text-xs text-gray-500 mt-0.5">{step.desc}</p>
-              <p className="text-xs font-mono text-gray-300 mt-1 bg-gray-800 rounded px-2 py-1">
+              <p className="text-xs font-mono text-gray-300 mt-1 bg-gray-800 rounded-sm px-2 py-1">
                 {step.detail}
               </p>
             </div>
