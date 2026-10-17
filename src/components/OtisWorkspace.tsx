@@ -213,6 +213,12 @@ export default function OtisWorkspace() {
               label={{ value: "8 mL/kg", fill: "#f59e0b", fontSize: 10, position: "insideTopRight" }} />
             <ReferenceLine y={vtKg6} stroke="#fbbf24" strokeDasharray="3 4" strokeWidth={1}
               label={{ value: "6 mL/kg", fill: "#fbbf24", fontSize: 9, position: "insideTopRight" }} />
+            <ReferenceLine y={iasv.vtMin} stroke="#64748b" strokeDasharray="2 4" strokeWidth={1}
+              label={{ value: "VT min (2·VD)", fill: "#94a3b8", fontSize: 9, position: "insideBottomRight" }} />
+            {iasv.fMaxBpm <= F_MAX && (
+              <ReferenceLine x={iasv.fMaxBpm} stroke="#64748b" strokeDasharray="2 4" strokeWidth={1}
+                label={{ value: "f max (20/τ)", fill: "#94a3b8", fontSize: 9, position: "insideTopLeft" }} />
+            )}
             <ReferenceLine y={vtDriving15} stroke="#a78bfa" strokeDasharray="5 4" strokeWidth={1}
               label={{ value: "ΔP=15", fill: "#a78bfa", fontSize: 10, position: "insideTopLeft" }} />
 

@@ -28,19 +28,19 @@ const symbolRows = [
   { sym: "DeltaP", unit: "cmH2O", desc: "Driving pressure = Pplat - PEEP_tot = VT/C. Prognostisch belangrijker dan Pplat." },
   { sym: "IBW", unit: "kg", desc: "Ideaal lichaamgewicht. Mannen: 50 + 2.3×(lengte in inches - 60); Vrouwen: 45.5 + 2.3×(lengte in inches - 60)." },
   { sym: "W_el", unit: "J", desc: "Elastisch werk: (1/2) × VT² / C. Overdruk- en overdistensie-gerelateerd." },
-  { sym: "W_res", unit: "J", desc: "Resistief werk: (π²/2) × R × f × VT². Sterk afhankelijk van stroming." },
+  { sym: "W_res", unit: "J", desc: "Inspiratoir resistief werk bij sinusoïdale flow: (π²/4) × R × f × VT². Sterk afhankelijk van stroming." },
   { sym: "W_iPEEP", unit: "J", desc: "Drempelwerk auto-PEEP: PEEPi × VT. Moet eerst overwonnen voordat inspiratie start." },
   { sym: "W_tot", unit: "J/min", desc: "Totale ademarbeid per minuut: f × 60 × (W_el + W_res + W_iPEEP)." },
 ];
 
 const otisRows = [
   {
-    formula: "2·π²·τ·f² + f - V̇A/VD = 0",
+    formula: "π²·τ·f² + f - V̇A/VD = 0",
     explain:
-      "Originele Otis-voorwaarde (1950) voor minimale ademarbeid per minuut bij vaste V̇A. Dit is een kwadratische vergelijking in f. De π²·τ·f²-term domineert bij hoge f en lage τ; de f-term (uit resistief werk) en constant (uit elastisch) bepalen het evenwicht.",
+      "Originele Otis-voorwaarde (1950) voor minimale ademarbeid per minuut bij vaste V̇A. Dit is een kwadratische vergelijking in f. De f²-term komt uit het resistieve werk, de f-term uit het elastische werk en de constante uit de verhouding V̇A/VD.",
   },
   {
-    formula: "f_opt = (−1 + √(1 + 8π²τ·(V̇A/VD))) / (4π²τ)",
+    formula: "f_opt = (√(1 + 4π²τ·(V̇A/VD)) − 1) / (2π²τ)",
     explain:
       "Gesloten oplossing; de positieve wortel van Otis' vergelijking. Dit geeft direct f_opt in Hz. Merk op: als τ↑ (langzame long) dan f_opt↓; als V̇A/VD↑ dan f_opt↑.",
   },
@@ -63,7 +63,7 @@ const meadRows = [
       "Elastisch werk per adem: proportioneelmet VT². Stijgt kwadratisch! Dit verklaart waarom zeer hoog VT energetisch duur is. In ARDS met lage C wordt dit snel dominant.",
   },
   {
-    formula: "W_res = (π²·R·f·VT²) / 2",
+    formula: "W_res = (π²·R·f·VT²) / 4",
     explain:
       "Resistief werk: ook kwadratisch in VT. Stijgt lineair met f en R. Hoge frequentie + hoge weerstand = zeer duur.",
   },
@@ -209,7 +209,7 @@ export default function TheoryIASVPage() {
             <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-cyan-300 space-y-1 overflow-x-auto">
               <p>W_tot (per minuut) = f·60·[W_el(VT) + W_res(f,VT) + W_iPEEP(VT)]</p>
               <p>W_el = VT²/(2·C)  [elastisch werk]</p>
-              <p>W_res = (π²·R·f·VT²)/2  [resistief werk]</p>
+              <p>W_res = (π²·R·f·VT²)/4  [inspiratoir resistief werk]</p>
               <p>W_iPEEP = PEEPi·VT  [drempelwerk]</p>
             </div>
             <p className="text-sm text-gray-300 leading-7 mt-2">

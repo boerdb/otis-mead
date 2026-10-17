@@ -9,8 +9,8 @@ export interface VentilatorParams {
   pLimit: number;
   /** Luchtwegweerstand R (cmH₂O·s/L) */
   resistance: number;
-  /** Expiratoire tijdconstante RC_exp (s) */
-  rcExp: number;
+  /** Compliance C (mL/cmH₂O); τ = R·C wordt hieruit afgeleid */
+  compliance: number;
   /** Ideaal lichaamsgewicht IBW (kg) */
   ibw: number;
   /** Alveolair doelminuutvolume V̇A (L/min) */
@@ -74,6 +74,13 @@ export interface iASVDecision {
   constrained: boolean;
   /** Welke limiet is actief? */
   limitingFactor: string;
+  /** Bestaat er een werkpunt op de V̇A-hyperbool dat aan alle limieten voldoet? */
+  feasible: boolean;
+  /** Frequentievenster volgens ASV-regels (bpm) */
+  fMinBpm: number;
+  fMaxBpm: number;
+  /** Minimaal VT volgens ASV-regel 2 × VD (L) */
+  vtMin: number;
   /** Score longbescherming 0–100 */
   protectionScore: number;
   /** Score WOB-efficiëntie 0–100 */

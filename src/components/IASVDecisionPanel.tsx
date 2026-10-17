@@ -24,41 +24,52 @@ export default function IASVDecisionPanel() {
   const steps = [
     {
       label: "Stap 1 — Otis Berekening",
-      desc: `Optimale frequentie via: f = [−1 + √(1 + 8π²τ·V̇A/VD)] / (4π²τ)`,
+      desc: `Optimale frequentie via: f = [√(1 + 4π²τ·V̇A/VD) − 1] / (2π²τ)`,
       detail: `f_opt = ${otis.fOptBpm.toFixed(1)} bpm  |  VT_opt = ${(otis.vtOpt * 1000).toFixed(0)} mL`,
       status: "ok",
     },
     {
-      label: "Stap 2 — Druk Limiet Check",
-      desc: `Ppeak = PEEP_tot + VT/C + R·π·f·VT ≤ ${params.pLimit} cmH₂O`,
+      label: "Stap 2 — ASV-venster",
+      desc: "5 ≤ f ≤ 20/τ bpm (Te ≥ 2τ) en VT ≥ 2 × VD",
+      detail: `f: ${iasv.fMinBpm.toFixed(0)}–${iasv.fMaxBpm.toFixed(1)} bpm  |  VT_min = ${(iasv.vtMin * 1000).toFixed(0)} mL`,
+      status:
+        otis.fOptBpm >= iasv.fMinBpm && otis.fOptBpm <= iasv.fMaxBpm && otis.vtOpt >= iasv.vtMin
+          ? "ok"
+          : "warn",
+    },
+    {
+      label: "Stap 3 — Druk Limiet Check",
+      desc: `Ppeak = PEEP_tot + VT·[1/(2C) + √(1/(4C²) + (Rπf)²)] ≤ ${params.pLimit} cmH₂O`,
       detail: `Ppeak (Otis) = ${protOtis.peakPressure.toFixed(1)} cmH₂O`,
       status: protOtis.peakPressure <= params.pLimit ? "ok" : "warn",
     },
     {
-      label: "Stap 3 — Driving Pressure Check",
+      label: "Stap 4 — Driving Pressure Check",
       desc: "ΔP = VT / C ≤ 15 cmH₂O (longbeschermend)",
       detail: `ΔP = ${protOtis.drivingPressure.toFixed(1)} cmH₂O`,
       status: protOtis.drivingPressure <= 15 ? "ok" : "warn",
     },
     {
-      label: "Stap 4 — VT/kg Veiligheidsgrens",
-      desc: "VT ≤ 8 mL/kg IBW (ARDSnet protocol)",
+      label: "Stap 5 — VT/kg Veiligheidsgrens",
+      desc: "VT ≤ 8 mL/kg IBW (didactische grens; ARDSnet streeft 6 mL/kg na)",
       detail: `VT/kg = ${protOtis.vtPerKg.toFixed(1)} mL/kg  (IBW = ${params.ibw} kg)`,
       status: protOtis.vtPerKg <= 8 ? "ok" : "warn",
     },
     {
-      label: "Stap 5 — Auto-PEEP Compensatie",
+      label: "Stap 6 — Auto-PEEP Compensatie",
       desc: "WOB_intrinsic = PEEPi × VT (extra arbeid voor trigger)",
       detail: `PEEPi = ${params.autoPeep} cmH₂O  →  extra ${(params.autoPeep * iasv.vtActual * 0.098).toFixed(4)} J/adem`,
       status: params.autoPeep === 0 ? "ok" : params.autoPeep <= 5 ? "warn" : "error",
     },
     {
-      label: "Stap 6 — iASV Definitieve Keuze",
-      desc: iasv.constrained
+      label: "Stap 7 — iASV Definitieve Keuze",
+      desc: !iasv.feasible
+        ? iasv.limitingFactor
+        : iasv.constrained
         ? `Optimum bijgesteld: ${iasv.limitingFactor}`
         : "Otis-optimum ligt binnen alle veiligheidslimieten ✓",
       detail: `f = ${iasv.fActual.toFixed(1)} bpm  |  VT = ${(iasv.vtActual * 1000).toFixed(0)} mL`,
-      status: iasv.constrained ? "warn" : "ok",
+      status: !iasv.feasible ? "error" : iasv.constrained ? "warn" : "ok",
     },
   ];
 

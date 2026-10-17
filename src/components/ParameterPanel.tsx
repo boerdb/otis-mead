@@ -3,6 +3,7 @@
 import { useVentStore } from "@/store/ventStore";
 import type { VentilatorParams } from "@/lib/types";
 import { RotateCcw } from "lucide-react";
+import { calcTau } from "@/lib/calculations";
 
 interface SliderDef {
   key: keyof VentilatorParams;
@@ -45,15 +46,15 @@ const SLIDERS: SliderDef[] = [
     label: "Weerstand (R)",
     unit: "cmH₂O·s/L",
     min: 2, max: 30, step: 0.5,
-    description: "Luchtwegweerstand (normaal 2–5, obstructief > 10)",
+    description: "Inclusief tube (geïntubeerd normaal 5–10, obstructief > 15)",
     color: "#a78bfa",
   },
   {
-    key: "rcExp",
-    label: "RC_exp (τ)",
-    unit: "s",
-    min: 0.1, max: 2.5, step: 0.05,
-    description: "Expiratoire tijdconstante RC = R×C",
+    key: "compliance",
+    label: "Compliance (C)",
+    unit: "mL/cmH₂O",
+    min: 10, max: 120, step: 1,
+    description: "Statische compliance (ARDS 20–40, normaal 50–80 bij IC-patiënt)",
     color: "#34d399",
   },
   {
@@ -141,9 +142,9 @@ export default function ParameterPanel() {
       {/* Afgeleide grootheden */}
       <div className="border-t border-gray-700 pt-4 grid grid-cols-2 gap-3">
         <DerivedValue
-          label="Compliance"
-          value={(params.rcExp / params.resistance).toFixed(3)}
-          unit="L/cmH₂O"
+          label="Tijdconstante τ = R·C"
+          value={calcTau(params).toFixed(2)}
+          unit="s"
           color="#94a3b8"
         />
         <DerivedValue

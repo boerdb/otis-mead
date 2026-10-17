@@ -12,7 +12,7 @@ export const defaultParams: VentilatorParams = {
   autoPeep:   0,
   pLimit:     30,
   resistance: 10,
-  rcExp:      0.5,
+  compliance: 50,
   ibw:        70,
   vaTarget:   5.0,
 };

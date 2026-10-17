@@ -36,7 +36,7 @@ export default function HomePage() {
             <span className="text-gray-700">·</span>
             <span>Mead (1960)</span>
             <span className="text-gray-700">·</span>
-            <span>Brunner & Laubscher (1993)</span>
+            <span>Laubscher et al. (1994)</span>
           </div>
         </div>
       </header>
@@ -83,32 +83,32 @@ function FormulaCard() {
       <div className="space-y-3">
         <Formula
           title="Otis — Optimale frequentie"
-          formula="2π²τ·f² + f − V̇A/VD = 0"
-          note="Minimiseert WOB/min bij constante V̇A"
+          formula="π²τ·f² + f − V̇A/VD = 0"
+          note="Minimaliseert inspiratoire arbeid/min bij constante V̇A (a = 2π², sinusoïdale flow)"
           accentClassName="text-yellow-400"
         />
         <Formula
-          title="WOB per adem (Mead)"
-          formula="W = VT²/(2C) + π²Rf·VT²/2 + PEEPi·VT"
-          note="Elastisch + Resistief + Intrinsiek"
+          title="Inspiratoire arbeid per adem"
+          formula="W = VT²/(2C) + π²Rf·VT²/4 + PEEPi·VT"
+          note="Elastisch + resistief + drempel (expiratie passief)"
           accentClassName="text-sky-400"
         />
         <Formula
-          title="Compliance"
-          formula="C = τ / R = RC_exp / R"
-          note="Afgeleide van tijdconstante"
+          title="Tijdconstante"
+          formula="τ = R · C"
+          note="Bepaalt f_opt en het ASV-maximum f ≤ 20/τ"
           accentClassName="text-emerald-400"
         />
         <Formula
           title="Driving Pressure"
           formula="ΔP = VT / C"
-          note="Longbeschermend < 15 cmH₂O"
+          note="Didactische grens ≤ 15 cmH₂O (Amato 2015)"
           accentClassName="text-violet-400"
         />
         <Formula
           title="Mechanisch Vermogen"
-          formula="MP = 0.098 · f · VT · (Ppeak − PEEP/2)"
-          note="Gattinoni 2016 — grens 17 J/min"
+          formula="MP = 0.098 · f · [VT²/(2C) + π²Rf·VT²/4 + PEEP_tot·VT]"
+          note="Gattinoni 2016, volledige vorm voor sinusoïdale flow — ~17 J/min (associatie)"
           accentClassName="text-pink-400"
         />
       </div>

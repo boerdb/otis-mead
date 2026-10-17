@@ -2,9 +2,15 @@
  * iASV Berekeningsmodule — Otis & Mead formules
  *
  * Bronnen:
- *  - Otis AB et al. (1950) "The Mechanical Work of Breathing" J Appl Physiol
- *  - Mead J (1960) "Control of respiratory frequency" J Appl Physiol
- *  - Brunner JX & Laubscher TP (1993) — ASV algoritme (Hamilton Medical)
+ *  - Otis AB, Fenn WO, Rahn H (1950) "Mechanics of breathing in man" J Appl Physiol 2:592–607
+ *  - Mead J (1960) "Control of respiratory frequency" J Appl Physiol 15:325–336
+ *  - Laubscher TP et al. (1994) "An adaptive lung ventilation controller" IEEE Trans Biomed Eng 41:51–59
+ *  - Radford EP (1955) — dode ruimte ≈ 2.2 mL/kg IBW (zoals gebruikt in ASV)
+ *  - Gattinoni L et al. (2016) "Ventilator-related causes of lung injury: the mechanical power"
+ *    Intensive Care Med 42:1567–1575
+ *
+ * Model: één-compartiment long (lineaire R en C) met sinusoïdaal flowprofiel,
+ * inspiratie = eerste halve periode, expiratie passief (geen spierarbeid).
  *
  * Eenheden:
  *   Druk  → cmH₂O
@@ -25,57 +31,74 @@ import type {
 
 // ─── Conversiefactoren ────────────────────────────────────────────────────────
 const CMH2O_TO_JOULE = 0.0980665; // 1 cmH₂O·L → J
+const PI2 = Math.PI ** 2;
+
+// ─── Veiligheidsgrenzen ──────────────────────────────────────────────────────
+
+/** Didactische longbeschermende grenzen (geen Hamilton-instellingen). */
+export const LIMITS = {
+  drivingPressure: 15, // cmH₂O
+  platPressure:    30, // cmH₂O
+  vtPerKg:         8,  // mL/kg IBW
+  mechPower:       17, // J/min
+} as const;
+
+/** ASV-regels: f ≥ 5/min, f ≤ 60/min en f ≤ 20/τ (Ti ≥ 1τ, Te ≥ 2τ). */
+export const ASV_F_MIN_BPM = 5;
+export const ASV_F_MAX_BPM = 60;
 
 // ─── Hulpfuncties ─────────────────────────────────────────────────────────────
 
-/** Compliance C = τ / R  (L/cmH₂O) */
+/** Compliance C (L/cmH₂O) uit de invoer in mL/cmH₂O */
 export function calcCompliance(params: VentilatorParams): number {
-  return params.rcExp / params.resistance;
+  return params.compliance / 1000;
 }
 
-/**
- * Dead space op basis van Fowler (≈ 2.2 mL/kg IBW)
- * plus instrumentele dead space (geschat 50 mL voor volwassen circuit)
- */
+/** Tijdconstante τ = R·C (s) */
+export function calcTau(params: VentilatorParams): number {
+  return params.resistance * calcCompliance(params);
+}
+
+/** Dode ruimte VD = 2.2 mL/kg IBW (Radford; ASV-conventie) */
 export function calcDeadSpace(params: VentilatorParams): number {
-  return params.ibw * 0.0022 + 0.05; // L
+  return params.ibw * 0.0022; // L
 }
 
 // ─── Otis-formule ─────────────────────────────────────────────────────────────
 
 /**
- * Exacte Otis-kwadratische vergelijking voor de optimale ademfrequentie
- * die de totale WOB/min minimaliseert bij constante V̇A.
+ * Otis-vergelijking voor de frequentie die de inspiratoire arbeid per minuut
+ * minimaliseert bij constante V̇A (sinusoïdale flow, a = 2π²):
  *
- *   2π²τ · f² + f − V̇A/VD = 0
+ *   π²τ · f² + f − V̇A/VD = 0
  *
- * Positieve wortel (Hz → bpm):
- *   f_opt = [−1 + √(1 + 8π²τ · V̇A/VD)] / (4π²τ)
+ * Positieve wortel (Hz):
+ *   f_opt = [√(1 + 2a·τ·V̇A/VD) − 1] / (a·τ)
  */
 export function calcOtis(params: VentilatorParams): OtisResult {
   const C = calcCompliance(params);
   const vd = calcDeadSpace(params);
-  const tau = params.rcExp;
+  const tau = calcTau(params);
   const VA_s = params.vaTarget / 60; // L/s
+  const a = 2 * PI2;
 
-  const discriminant = 1 + 8 * Math.PI ** 2 * tau * (VA_s / vd);
-  const fHz = (-1 + Math.sqrt(Math.max(discriminant, 0))) / (4 * Math.PI ** 2 * tau);
+  const fHz = (Math.sqrt(1 + 2 * a * tau * (VA_s / vd)) - 1) / (a * tau);
   const fBpm = fHz * 60;
   const vtOpt = VA_s / fHz + vd; // VT = V̇A/f + VD
 
   return { fOptHz: fHz, fOptBpm: fBpm, vtOpt, vd, compliance: C, tau };
 }
 
-// ─── WOB-berekening (Otis/Mead sinusoïdaal profiel) ──────────────────────────
+// ─── WOB-berekening (Otis sinusoïdaal profiel) ───────────────────────────────
 
 /**
- * Werk van ademen voor één adem bij sinusoïdaal flowprofiel:
+ * Inspiratoire arbeid voor één adem bij sinusoïdaal flowprofiel:
  *
  *   W_el    = VT² / (2C)                   [cmH₂O·L]
- *   W_res   = π²·R·f·VT² / 2               [cmH₂O·L]
+ *   W_res   = π²·R·f·VT² / 4               [cmH₂O·L]  (alleen inspiratie)
  *   W_iPEEP = PEEPi · VT                   [cmH₂O·L]
  *
- * Alles × 0.098 → Joule
+ * Expiratie is passief en telt niet mee. Alles × 0.098 → Joule.
  */
 export function calcWOB(
   params: VentilatorParams,
@@ -84,9 +107,9 @@ export function calcWOB(
 ): WOBResult {
   const C = calcCompliance(params);
 
-  const elastic   = (vt ** 2 / (2 * C))                     * CMH2O_TO_JOULE;
-  const resistive = (Math.PI ** 2 * params.resistance * fHz * vt ** 2) / 2 * CMH2O_TO_JOULE;
-  const intrinsic = params.autoPeep * vt                    * CMH2O_TO_JOULE;
+  const elastic   = (vt ** 2 / (2 * C))                  * CMH2O_TO_JOULE;
+  const resistive = (PI2 * params.resistance * fHz * vt ** 2) / 4 * CMH2O_TO_JOULE;
+  const intrinsic = params.autoPeep * vt                 * CMH2O_TO_JOULE;
 
   const perBreath  = elastic + resistive + intrinsic;
   const perMinute  = perBreath * fHz * 60;
@@ -96,6 +119,21 @@ export function calcWOB(
 
 // ─── Longbescherming ──────────────────────────────────────────────────────────
 
+/**
+ * Piekdruk boven PEEP_tot per liter VT bij sinusoïdale inspiratie.
+ *
+ *   P(θ) − PEEP_tot = VT/(2C)·(1 − cos θ) + R·π·f·VT·sin θ,  θ ∈ [0, π]
+ *   max = VT · [1/(2C) + √(1/(4C²) + (R·π·f)²)]
+ *
+ * Elastische en resistieve piek vallen niet samen, dus dit is lager dan
+ * VT/C + R·π·f·VT.
+ */
+function peakPressurePerLitre(C: number, R: number, fHz: number): number {
+  const e = 1 / (2 * C);
+  const r = R * Math.PI * fHz;
+  return e + Math.sqrt(e * e + r * r);
+}
+
 export function calcLungProtection(
   params: VentilatorParams,
   fHz: number,
@@ -103,80 +141,131 @@ export function calcLungProtection(
 ): LungProtectionResult {
   const C          = calcCompliance(params);
   const totalPeep  = params.peep + params.autoPeep;
-  const peakFlow   = Math.PI * fHz * vt;          // sinusoïdaal piekflow (L/s)
 
   const drivingPressure = vt / C;
-  const peakPressure    = totalPeep + drivingPressure + params.resistance * peakFlow;
+  const peakPressure    = totalPeep + vt * peakPressurePerLitre(C, params.resistance, fHz);
   const platPressure    = totalPeep + drivingPressure;
   const vtPerKg         = (vt * 1000) / params.ibw;
 
-  // Mechanisch vermogen (Gattinoni 2016)
-  const mechPower = 0.098 * fHz * 60 * vt * (peakPressure - params.peep / 2);
+  // Mechanisch vermogen (Gattinoni 2016, volledige vergelijking) toegepast op
+  // het sinusoïdale profiel: energie per inspiratie = ∫P dV
+  //   = VT²/(2C) + π²·R·f·VT²/4 + PEEP_tot·VT
+  const energyPerBreath =
+    vt ** 2 / (2 * C) + (PI2 * params.resistance * fHz * vt ** 2) / 4 + totalPeep * vt;
+  const mechPower = CMH2O_TO_JOULE * fHz * 60 * energyPerBreath;
 
   return { drivingPressure, peakPressure, platPressure, vtPerKg, mechPower, totalPeep };
 }
 
 // ─── iASV beslissingsalgoritme ────────────────────────────────────────────────
 
+interface Constraint {
+  label: string;
+  ok: (fBpm: number, vt: number) => boolean;
+}
+
+/** Frequentievenster volgens de ASV-regels (bpm). */
+export function calcFrequencyWindow(params: VentilatorParams): { fMinBpm: number; fMaxBpm: number } {
+  return {
+    fMinBpm: ASV_F_MIN_BPM,
+    fMaxBpm: Math.min(ASV_F_MAX_BPM, 20 / calcTau(params)),
+  };
+}
+
+function buildConstraints(params: VentilatorParams): Constraint[] {
+  const C         = calcCompliance(params);
+  const vd        = calcDeadSpace(params);
+  const totalPeep = params.peep + params.autoPeep;
+  const { fMinBpm, fMaxBpm } = calcFrequencyWindow(params);
+  const eps = 1e-9;
+
+  return [
+    { label: `Minimale frequentie (${ASV_F_MIN_BPM}/min)`, ok: (f) => f >= fMinBpm - eps },
+    { label: "Maximale frequentie (20/τ — auto-PEEP-preventie)", ok: (f) => f <= fMaxBpm + eps },
+    { label: "Minimaal VT (2 × VD)", ok: (_, vt) => vt >= 2 * vd - eps },
+    {
+      label: "Druk limiet (Ppeak)",
+      ok: (f, vt) =>
+        totalPeep + vt * peakPressurePerLitre(C, params.resistance, f / 60) <= params.pLimit + eps,
+    },
+    {
+      label: `Driving pressure (ΔP ≤ ${LIMITS.drivingPressure})`,
+      ok: (_, vt) => vt / C <= LIMITS.drivingPressure + eps,
+    },
+    {
+      label: `Plateaudruk (≤ ${LIMITS.platPressure} cmH₂O)`,
+      ok: (_, vt) => totalPeep + vt / C <= LIMITS.platPressure + eps,
+    },
+    {
+      label: `VT/kg-grens (${LIMITS.vtPerKg} mL/kg)`,
+      ok: (_, vt) => (vt * 1000) / params.ibw <= LIMITS.vtPerKg + eps,
+    },
+  ];
+}
+
 /**
- * Simuleert het Hamilton iASV algoritme:
- *  1. Bereken het Otis-optimum (f, VT)
- *  2. Test alle veiligheidslimieten
- *  3. Selecteer het maximale veilige VT, pas f aan om V̇A te behouden
- *  4. Rapporteer welke limiet actief is
+ * Simuleert de iASV-keuze in het Otis-model:
+ *  1. Bereken het Otis-optimum (f, VT) op de V̇A-hyperbool
+ *  2. Bepaal welke punten op de hyperbool aan alle limieten voldoen
+ *  3. Kies het toegestane punt met f het dichtst bij f_Otis (V̇A blijft gelijk)
+ *  4. Rapporteer welke limiet de verschuiving veroorzaakt
+ *
+ * Langs de hyperbool hangen alle limieten van f af (Ppeak via VT én f), dus
+ * de grens wordt gezamenlijk opgelost in plaats van alleen VT af te kappen.
  */
 export function calcIASV(params: VentilatorParams): iASVDecision {
-  const otis       = calcOtis(params);
-  const C          = otis.compliance;
-  const vd         = otis.vd;
-  const VA_s       = params.vaTarget / 60;
-  const fOtisHz    = otis.fOptHz;
-  const totalPeep  = params.peep + params.autoPeep;
+  const otis      = calcOtis(params);
+  const vd        = otis.vd;
+  const VA_s      = params.vaTarget / 60;
+  const { fMinBpm, fMaxBpm } = calcFrequencyWindow(params);
+  const constraints = buildConstraints(params);
 
-  // ── Maximaal VT op basis van elke limiet ──────────────────────────────────
-  // 1. Druk limiet: Ppeak = PEEP_tot + VT/C + R·π·f·VT  ≤ Plimit
-  //    VT(f) ≤ (Plimit − PEEP_tot) / (1/C + R·π·f)
-  const vtMaxPressure = (params.pLimit - totalPeep) /
-    (1 / C + params.resistance * Math.PI * fOtisHz);
+  const vtAt = (fBpm: number) => VA_s / (fBpm / 60) + vd;
+  const failing = (fBpm: number) =>
+    constraints.filter((c) => !c.ok(fBpm, vtAt(fBpm))).map((c) => c.label);
+  const feasibleAt = (fBpm: number) => failing(fBpm).length === 0;
 
-  // 2. Driving pressure: VT/C ≤ 15 cmH₂O
-  const vtMaxDriving  = 15 * C;
-
-  // 3. VT/kg ≤ 8 mL/kg
-  const vtMaxKg       = (params.ibw * 8) / 1000;
-
-  // 4. Plateaudruk ≤ 30 cmH₂O: totalPeep + VT/C ≤ 30
-  const vtMaxPlat     = (30 - totalPeep) * C;
-
-  const vtCeiling = Math.max(
-    0.05,
-    Math.min(vtMaxPressure, vtMaxDriving, vtMaxKg, vtMaxPlat)
-  );
-
-  const vtActual     = Math.min(otis.vtOpt, vtCeiling);
-  const constrained  = vtActual < otis.vtOpt - 0.001;
-
-  // Compenseer f om V̇A te behouden
-  const fActualHz    = constrained
-    ? VA_s / Math.max(vtActual - vd, 0.02)
-    : fOtisHz;
-
-  // Welke limiet is actief?
+  const fOtis = otis.fOptBpm;
+  let fChosen = fOtis;
+  let feasible = true;
   let limitingFactor = "Geen — Otis-optimum";
-  if (constrained) {
-    const diffs = [
-      { label: "Druk limiet (Ppeak)", v: vtMaxPressure },
-      { label: "Driving pressure (ΔP ≤ 15)", v: vtMaxDriving },
-      { label: "VT/kg-grens (8 mL/kg)", v: vtMaxKg },
-      { label: "Plateaudruk (≤ 30 cmH₂O)", v: vtMaxPlat },
-    ];
-    limitingFactor = diffs.reduce((a, b) => (a.v < b.v ? a : b)).label;
+
+  if (!feasibleAt(fOtis)) {
+    // Fijn raster binnen het ASV-frequentievenster, daarna bisectie op de grens.
+    const step = 0.01;
+    let best: number | null = null;
+    for (let f = fMinBpm; f <= fMaxBpm + 1e-9; f += step) {
+      if (feasibleAt(f) && (best === null || Math.abs(f - fOtis) < Math.abs(best - fOtis))) {
+        best = f;
+      }
+    }
+
+    if (best === null) {
+      feasible = false;
+      fChosen = Math.min(fMaxBpm, Math.max(fMinBpm, fOtis));
+      limitingFactor = `Geen veilig werkpunt: ${failing(fChosen).join(", ")}`;
+    } else {
+      // Bisectie tussen het laatste toegestane punt en het eerste verboden punt richting f_Otis.
+      const dir = Math.sign(fOtis - best);
+      let lo = best;
+      let hi = Math.abs(fOtis - best) < step ? fOtis : best + dir * step;
+      for (let i = 0; i < 40; i++) {
+        const mid = (lo + hi) / 2;
+        if (feasibleAt(mid)) lo = mid; else hi = mid;
+      }
+      fChosen = lo;
+      limitingFactor = failing(hi).join(", ");
+    }
   }
+
+  const fActualHz = fChosen / 60;
+  const vtActual  = vtAt(fChosen);
+  const constrained = !feasible || Math.abs(fChosen - fOtis) > 1e-6;
 
   // ── Scores ────────────────────────────────────────────────────────────────
   const prot       = calcLungProtection(params, fActualHz, vtActual);
   const wobActual  = calcWOB(params, fActualHz, vtActual);
-  const wobOtis    = calcWOB(params, fOtisHz, otis.vtOpt);
+  const wobOtis    = calcWOB(params, otis.fOptHz, otis.vtOpt);
 
   // WOB-score: hoe dicht bij het theoretische minimum?
   const wobScore = Math.max(0, Math.min(100,
@@ -185,19 +274,23 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
 
   // Longbescherming-score: penaliseer overschrijding limieten
   let protScore = 100;
-  if (prot.drivingPressure > 15) protScore -= (prot.drivingPressure - 15) * 5;
+  if (prot.drivingPressure > LIMITS.drivingPressure) protScore -= (prot.drivingPressure - LIMITS.drivingPressure) * 5;
   if (prot.peakPressure > params.pLimit) protScore -= (prot.peakPressure - params.pLimit) * 5;
-  if (prot.vtPerKg > 8) protScore -= (prot.vtPerKg - 8) * 10;
-  if (prot.mechPower > 17) protScore -= (prot.mechPower - 17) * 2;
+  if (prot.vtPerKg > LIMITS.vtPerKg) protScore -= (prot.vtPerKg - LIMITS.vtPerKg) * 10;
+  if (prot.mechPower > LIMITS.mechPower) protScore -= (prot.mechPower - LIMITS.mechPower) * 2;
   protScore = Math.max(0, Math.min(100, protScore));
 
   return {
     fOtis:           otis.fOptBpm,
     vtOtis:          otis.vtOpt,
-    fActual:         fActualHz * 60,
+    fActual:         fChosen,
     vtActual,
     constrained,
     limitingFactor,
+    feasible,
+    fMinBpm,
+    fMaxBpm,
+    vtMin:           2 * vd,
     protectionScore: protScore,
     wobScore,
   };
@@ -211,8 +304,8 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
  */
 export function generateWorkspace(params: VentilatorParams): WorkspacePoint[] {
   const points: WorkspacePoint[] = [];
-  const fSteps  = 37; // 4..40 bpm
-  const vtSteps = 27; // 0.2..1.5 L
+  const fSteps  = 36; // 4..40 bpm
+  const vtSteps = 26; // 0.2..1.5 L
 
   for (let fi = 0; fi <= fSteps; fi++) {
     const fBpm = 4 + fi * 1;
@@ -237,8 +330,7 @@ export function calcVtHyperbolaAtF(params: VentilatorParams, fBpm: number): numb
 export function calcVtPressureLimitAtF(params: VentilatorParams, fBpm: number): number {
   const C = calcCompliance(params);
   const totalPeep = params.peep + params.autoPeep;
-  const fHz = fBpm / 60;
-  return (params.pLimit - totalPeep) / (1 / C + params.resistance * Math.PI * fHz);
+  return (params.pLimit - totalPeep) / peakPressurePerLitre(C, params.resistance, fBpm / 60);
 }
 
 /**
@@ -247,12 +339,9 @@ export function calcVtPressureLimitAtF(params: VentilatorParams, fBpm: number): 
 export function generateVentilationHyperbola(
   params: VentilatorParams
 ): { f: number; vt: number }[] {
-  const vd   = calcDeadSpace(params);
-  const VA_s = params.vaTarget / 60;
   const result = [];
   for (let fBpm = 4; fBpm <= 40; fBpm += 0.5) {
-    const fHz = fBpm / 60;
-    const vt  = VA_s / fHz + vd;
+    const vt = calcVtHyperbolaAtF(params, fBpm);
     if (vt > 0.15 && vt < 2.0) result.push({ f: fBpm, vt });
   }
   return result;
@@ -260,18 +349,14 @@ export function generateVentilationHyperbola(
 
 /**
  * Genereert de druk-limietlijn in het (f, VT)-vlak.
- * VT_max(f) = (Plimit − PEEP_tot) / (1/C + R·π·f)
+ * VT_max(f) = (Plimit − PEEP_tot) / [1/(2C) + √(1/(4C²) + (R·π·f)²)]
  */
 export function generatePressureLimitLine(
   params: VentilatorParams
 ): { f: number; vt: number }[] {
-  const C        = calcCompliance(params);
-  const totalPeep = params.peep + params.autoPeep;
-  const result   = [];
+  const result = [];
   for (let fBpm = 4; fBpm <= 40; fBpm += 0.5) {
-    const fHz = fBpm / 60;
-    const vt  = (params.pLimit - totalPeep) /
-                (1 / C + params.resistance * Math.PI * fHz);
+    const vt = calcVtPressureLimitAtF(params, fBpm);
     if (vt > 0.1) result.push({ f: fBpm, vt });
   }
   return result;

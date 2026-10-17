@@ -101,7 +101,7 @@ export default function WOBBreakdown() {
       <div className="mt-4 bg-gray-800 rounded-xl p-3 space-y-1">
         <p className="text-xs text-gray-400 font-semibold">Otis-formule (sinusoïdaal profiel)</p>
         <p className="text-xs text-gray-500 font-mono">
-          W = VT² / (2C) + π²·R·f·VT²/2 + PEEPi·VT
+          W = VT² / (2C) + π²·R·f·VT²/4 + PEEPi·VT
         </p>
         <div className="grid grid-cols-3 gap-2 mt-2">
           <MiniStat label="C (compliance)" value={`${otis.compliance.toFixed(3)} L/cmH₂O`} />
