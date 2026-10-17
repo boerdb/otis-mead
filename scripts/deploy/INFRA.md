@@ -8,7 +8,7 @@
 | Poort | **3015** |
 | GitHub | `git@github.com:boerdb/otis-mead.git` |
 
-SSH-credentials staan in `C:\DEV\dash-next-app\scripts\db-migration\.secrets.local` (zelfde als dash-next-app).
+Inloggen met SSH-sleutel `~/.ssh/id_ed25519_homelab` als `root` (zelfde als brotherdruk). Overschrijfbaar met `SSH_KEY_PATH`, `SSH_KEY_PASSPHRASE`, `DEPLOY_HOST` en `DEPLOY_USER`.
 
 ## Normale deploy
 
@@ -41,4 +41,4 @@ curl -I http://127.0.0.1:3015/
 
 ## Node-versie
 
-Server gebruikt Node **20.x** (via nvm/system). Lokaal hetzelfde houden voorkomt lockfile-problemen; commit altijd `package-lock.json` na dependency-wijzigingen.
+Server gebruikt Node **24.x** (npm 11). Lokaal hetzelfde houden voorkomt lockfile-problemen; commit altijd `package-lock.json` na dependency-wijzigingen.

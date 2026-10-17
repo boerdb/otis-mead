@@ -2,35 +2,34 @@
 """Deploy otis-mead naar 192.168.1.32 (git pull, build, pm2 restart)."""
 from __future__ import annotations
 
+import os
 import sys
 import time
-from pathlib import Path
 
 import paramiko
 
-HOST = "192.168.1.32"
+HOST = os.environ.get("DEPLOY_HOST", "192.168.1.32")
+USER = os.environ.get("DEPLOY_USER", "root")
+# Inloggen met de SSH-sleutel, niet met een wachtwoord (zelfde als brotherdruk).
+SSH_KEY_PATH = os.path.expanduser(os.environ.get("SSH_KEY_PATH", "~/.ssh/id_ed25519_homelab"))
+SSH_KEY_PASSPHRASE = os.environ.get("SSH_KEY_PASSPHRASE") or None
 APP = "/var/www/otis-mead"
 PM2_NAME = "otis-mead"
-SECRETS = Path(r"C:\DEV\dash-next-app\scripts\db-migration\.secrets.local")
-
-
-def load_secrets() -> dict[str, str]:
-    if not SECRETS.is_file():
-        raise SystemExit(f"Geen secrets: {SECRETS}")
-    out: dict[str, str] = {}
-    for line in SECRETS.read_text(encoding="utf-8").splitlines():
-        if "=" in line and not line.strip().startswith("#"):
-            k, v = line.split("=", 1)
-            out[k.strip()] = v.strip()
-    return out
 
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    s = load_secrets()
     c = paramiko.SSHClient()
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    c.connect(HOST, username=s["SSH_USER"], password=s["SSH_PASS"], timeout=15)
+    c.connect(
+        HOST,
+        username=USER,
+        key_filename=SSH_KEY_PATH,
+        passphrase=SSH_KEY_PASSPHRASE,
+        allow_agent=False,
+        look_for_keys=False,
+        timeout=15,
+    )
 
     def run(cmd: str, timeout: int = 600) -> str:
         _, o, e = c.exec_command(cmd, timeout=timeout)
