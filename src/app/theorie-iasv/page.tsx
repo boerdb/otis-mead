@@ -5,92 +5,128 @@ import PrintTheoryButton from "@/components/PrintTheoryButton";
 export const metadata: Metadata = {
   title: "iASV-theorie - uitgebreide referentie",
   description:
-    "Uitgebreide theoretische referentie voor iASV met Otis- en Mead-context, biologische mechanica, wiskundige afleidingen, klinische onderbouwing, geavanceerde onderwerpen en beperkingen.",
+    "Theoretische referentie bij de iASV-simulator: het Otis-optimum, de componenten van ademarbeid, de ASV-veiligheidsregels, longbescherming en de beperkingen van het model.",
 };
 
 const symbolRows = [
-  { sym: "f", unit: "1/s of bpm", desc: "Ademfrequentie. In vergelijkingen als Hz (1/s), op monitor als bpm. Fysiologisch bereik 5-50 bpm." },
-  { sym: "VT", unit: "L", desc: "Teugvolume per ademteug. Ongeveer 6-8 mL/kg IBW in beschermende ventilatie." },
-  { sym: "VdotA", unit: "L/min of L/s", desc: "Alveolaire ventilatie: effectieve ventilatie na dode ruimte. VdotA = (VT - VD) × f." },
-  { sym: "VD", unit: "L", desc: "Fysiologische dode ruimte. Ongeveer 0.15 L × (lichaamgewicht in kg)/70 of 2 mL/kg." },
-  { sym: "VDanat", unit: "L", desc: "Anatomische dode ruimte (airways tot terminale bronchioli): ~150 mL." },
-  { sym: "VDalv", unit: "L", desc: "Alveolaire dode ruimte (ventilatie zonder perfusie, V/Q>>1)." },
-  { sym: "R", unit: "cmH2O·s/L", desc: "Luchtwegweerstand. Normaal 5-10, ARDS 15-30+. Sterk stromingsafhankelijk, niet-lineair bij hoge stroming." },
-  { sym: "C", unit: "L/cmH2O", desc: "Totale compliance (long + thorax). ARDS 20-50 mL/cmH2O. 1/C_tot = 1/C_long + 1/C_thorax." },
-  { sym: "Cstat", unit: "L/cmH2O", desc: "Statische compliance (zonder stroming): (VT)/(Pplat - PEEP)." },
-  { sym: "Cdyn", unit: "L/cmH2O", desc: "Dynamische compliance (met stroming): (VT)/(Ppeak - PEEP). Cdyn &lt; Cstat bij obstructie." },
-  { sym: "tau", unit: "s", desc: "Tijdconstante: tau = R × C. Bepaalt vulling/lediging snelheid (95% in ~3×tau)." },
-  { sym: "PEEPe", unit: "cmH2O", desc: "Extrinsic PEEP: ventilator-ingesteld PEEP." },
-  { sym: "PEEPi", unit: "cmH2O", desc: "Intrinsic PEEP (auto-PEEP): luchtval. Treedt op als expiratie onvoldoende lang." },
-  { sym: "PEEP_tot", unit: "cmH2O", desc: "Totale PEEP: PEEPe + PEEPi. Bepaalt startniveau elastische rekking." },
-  { sym: "Ppeak", unit: "cmH2O", desc: "Piekdruk (start expiratie): stuwkracht voor stroming. ARDS <30 cmH2O aanbevolen." },
-  { sym: "Pplat", unit: "cmH2O", desc: "Plateaudruk (end-inspiratie, geen stroming): zuiver elastisch. ARDS <30 cmH2O target." },
-  { sym: "DeltaP", unit: "cmH2O", desc: "Driving pressure = Pplat - PEEP_tot = VT/C. Prognostisch belangrijker dan Pplat." },
-  { sym: "IBW", unit: "kg", desc: "Ideaal lichaamgewicht. Mannen: 50 + 2.3×(lengte in inches - 60); Vrouwen: 45.5 + 2.3×(lengte in inches - 60)." },
-  { sym: "W_el", unit: "J", desc: "Elastisch werk: (1/2) × VT² / C. Overdruk- en overdistensie-gerelateerd." },
-  { sym: "W_res", unit: "J", desc: "Inspiratoir resistief werk bij sinusoïdale flow: (π²/4) × R × f × VT². Sterk afhankelijk van stroming." },
-  { sym: "W_iPEEP", unit: "J", desc: "Drempelwerk auto-PEEP: PEEPi × VT. Moet eerst overwonnen voordat inspiratie start." },
-  { sym: "W_tot", unit: "J/min", desc: "Totale ademarbeid per minuut: f × 60 × (W_el + W_res + W_iPEEP)." },
+  { sym: "f", unit: "1/s of /min", desc: "Ademfrequentie. In de vergelijkingen in Hz (1/s), op de monitor per minuut." },
+  { sym: "VT", unit: "L", desc: "Teugvolume. Longbeschermend doel 6 mL/kg IBW (bereik 4–8)." },
+  { sym: "V̇E", unit: "L/min", desc: "Minuutvolume: VT × f." },
+  { sym: "V̇A", unit: "L/min", desc: "Alveolaire ventilatie: (VT − VD) × f. Bepaalt samen met de CO₂-productie de PaCO₂." },
+  { sym: "VD", unit: "L", desc: "Dode ruimte. ASV schat de luchtwegdode ruimte als 2.2 mL/kg IBW (Radford). De fysiologische dode ruimte (anatomisch + alveolair) is bij ARDS vaak veel groter." },
+  { sym: "R", unit: "cmH₂O·s/L", desc: "Inspiratoire weerstand van tube en luchtwegen. Geïntubeerd ongeveer 5–10, bij ernstige obstructie > 20. Stijgt met de flow (Rohrer)." },
+  { sym: "C", unit: "mL/cmH₂O", desc: "Compliance van het respiratoire systeem (long + thoraxwand): 1/C = 1/C_long + 1/C_thoraxwand. Geventileerde IC-patiënt zonder longziekte ongeveer 50–80, ARDS vaak 20–40." },
+  { sym: "Cstat", unit: "mL/cmH₂O", desc: "Statische compliance: VT / (Pplat − PEEP_tot)." },
+  { sym: "Cdyn", unit: "mL/cmH₂O", desc: "Dynamische ‘compliance’: VT / (Ppeak − PEEP_tot). Bevat ook de resistieve druk en is daarom altijd lager dan Cstat; het verschil groeit bij hoge weerstand of flow." },
+  { sym: "τ", unit: "s", desc: "Tijdconstante τ = R × C. Na 1τ is 63% en na 3τ 95% van het volume uitgeademd. ASV meet de expiratoire tijdconstante (RCexp) per ademteug." },
+  { sym: "PEEPe", unit: "cmH₂O", desc: "Ingestelde (extrinsieke) PEEP." },
+  { sym: "PEEPi", unit: "cmH₂O", desc: "Intrinsieke PEEP (auto-PEEP): alveolaire druk boven PEEPe aan het eind van de expiratie, door onvolledige uitademing." },
+  { sym: "PEEP_tot", unit: "cmH₂O", desc: "Totale PEEP: PEEPe + PEEPi." },
+  { sym: "Ppeak", unit: "cmH₂O", desc: "Maximale luchtwegdruk tijdens inspiratie: elastische plus resistieve component. Zegt weinig over de alveolaire belasting." },
+  { sym: "Pplat", unit: "cmH₂O", desc: "Plateaudruk bij inspiratoire pauze (geen flow): PEEP_tot + VT/C. Longbeschermend doel ≤ 30 cmH₂O." },
+  { sym: "ΔP", unit: "cmH₂O", desc: "Driving pressure: Pplat − PEEP_tot = VT/C. Sterkste ventilatorgerelateerde voorspeller van mortaliteit bij ARDS (Amato 2015)." },
+  { sym: "IBW", unit: "kg", desc: "Ideaal lichaamsgewicht (Devine), op basis van lengte: man 50 + 0.91 × (lengte in cm − 152.4); vrouw 45.5 + 0.91 × (lengte in cm − 152.4)." },
+  { sym: "W_el", unit: "J", desc: "Elastisch werk per inspiratie: VT²/(2C)." },
+  { sym: "W_res", unit: "J", desc: "Resistief werk per inspiratie bij sinusoïdale flow: π²·R·f·VT²/4." },
+  { sym: "W_iPEEP", unit: "J", desc: "Drempelwerk: PEEPi × VT. Een spontaan ademende patiënt moet PEEPi overwinnen voordat er flow ontstaat." },
+  { sym: "MP", unit: "J/min", desc: "Mechanisch vermogen: energie die de ventilator per minuut aan het respiratoire systeem overdraagt (Gattinoni 2016)." },
 ];
 
 const otisRows = [
   {
-    formula: "π²·τ·f² + f - V̇A/VD = 0",
+    formula: "Ẇ(f) = f · [ VT²/(2C) + π²·R·f·VT²/4 ],   met VT = V̇A/f + VD",
     explain:
-      "Originele Otis-voorwaarde (1950) voor minimale ademarbeid per minuut bij vaste V̇A. Dit is een kwadratische vergelijking in f. De f²-term komt uit het resistieve werk, de f-term uit het elastische werk en de constante uit de verhouding V̇A/VD.",
+      "Inspiratoire arbeid per minuut langs de V̇A-hyperbool. Lage f maakt VT groot (elastisch werk stijgt kwadratisch), hoge f verhoogt de flow (resistief werk) en verspilt meer ventilatie aan de dode ruimte.",
   },
   {
-    formula: "f_opt = (√(1 + 4π²τ·(V̇A/VD)) − 1) / (2π²τ)",
+    formula: "dẆ/df = 0   ⇒   π²·τ·f² + f − V̇A/VD = 0",
     explain:
-      "Gesloten oplossing; de positieve wortel van Otis' vergelijking. Dit geeft direct f_opt in Hz. Merk op: als τ↑ (langzame long) dan f_opt↓; als V̇A/VD↑ dan f_opt↑.",
+      "Minimaliseren naar f levert een kwadratische vergelijking op. De f²-term komt uit het resistieve werk, de f-term uit het elastische werk en de constante uit de verhouding V̇A/VD. Alleen τ = R·C en V̇A/VD bepalen het optimum.",
+  },
+  {
+    formula: "f_opt = ( √(1 + 2a·τ·V̇A/VD) − 1 ) / (a·τ),   a = 2π²",
+    explain:
+      "De positieve wortel, in Hz. Dit is de vorm die in ASV wordt gebruikt; de constante a hangt af van het veronderstelde flowprofiel (2π² voor sinusoïdale flow).",
   },
   {
     formula: "VT_opt = V̇A/f_opt + VD",
     explain:
-      "Zodra f_opt bekend is, volgt VT_opt uit behoud van alveolaire ventilatie. Lagere f leidt tot hoger VT voor dezelfde V̇A.",
-  },
-  {
-    formula: "W_tot(f) = W_el(f) + W_res(f) + W_iPEEP(f) [per minuut vermenigvuldigd met f·60]",
-    explain:
-      "Totale ademarbeid als functie van f. Dit is wat Otis minimaliseerde. In ARDS met hoge auto-PEEP kan W_iPEEP dominant worden.",
+      "Het bijbehorende teugvolume volgt uit het behoud van alveolaire ventilatie.",
   },
 ];
 
-const meadRows = [
+const workRows = [
   {
     formula: "W_el = VT² / (2·C)",
     explain:
-      "Elastisch werk per adem: proportioneelmet VT². Stijgt kwadratisch! Dit verklaart waarom zeer hoog VT energetisch duur is. In ARDS met lage C wordt dit snel dominant.",
+      "Elastisch werk per inspiratie: de oppervlakte onder de statische druk-volumelijn. Kwadratisch in VT en omgekeerd evenredig met C.",
   },
   {
-    formula: "W_res = (π²·R·f·VT²) / 4",
+    formula: "W_res = π²·R·f·VT² / 4",
     explain:
-      "Resistief werk: ook kwadratisch in VT. Stijgt lineair met f en R. Hoge frequentie + hoge weerstand = zeer duur.",
+      "Resistief werk tijdens de inspiratie bij sinusoïdale flow (piekflow π·f·VT). Neemt lineair toe met R en f en kwadratisch met VT. De expiratie is passief: die wordt gedreven door de elastische energie die tijdens de inspiratie is opgeslagen.",
   },
   {
-    formula: "W_iPEEP = PEEPi·VT",
+    formula: "W_iPEEP = PEEPi · VT",
     explain:
-      "Drempelwerk: moet eerst intrinsic PEEP overwinnen. Lineair in beide PEEPi en VT. Vaak onderschat in ARDS/COPD.",
+      "Drempelwerk bij spontane ademhaling: de ademspieren moeten eerst PEEPi overwinnen voordat de alveolaire druk onder de luchtwegdruk zakt en flow ontstaat. Bij volledig passieve beademing levert de ventilator deze energie.",
   },
   {
-    formula: "W_tot = W_el + W_res + W_iPEEP (per adem)",
+    formula: "dW/df langs de hyperbool = 0",
     explain:
-      "Totale werk per adem. Per minuut: f·60·W_tot. Dit is wat Otis + Mead samen beschrijven.",
-  },
-  {
-    formula: "dW_tot/dVT = VT/C + π²·R·f·VT = 0 [voor optimum]",
-    explain:
-      "Differentiaalanalyse: elastisch en resistief werk moeten elkaar balanceren. Dit is Mead's redenering.",
+      "Het optimum ligt waar de toename van resistief werk bij een hogere f precies opweegt tegen de afname van elastisch werk door het kleinere VT. Langs VT (bij vaste f) bestaat geen minimum: V̇A ligt dan niet vast.",
   },
 ];
 
-const iasvSteps = [
-  "Bepaal theoretisch optimaal werkpunt met Otis: f_opt en VT_opt.",
-  "Bereken veiligheidsgrenzen: Ppeak, Pplat, ΔP, VT/kg, PEEPi, etc.",
-  "Bepaal VT_ceiling = minimum van alle veiligheidslimieten.",
-  "Als VT_opt &gt; VT_ceiling: pas VT aan naar VT_ceiling, corrigeer f om V̇A constant te houden.",
-  "Rapporteer dominante limiter, energetische kosten en longbeschermingsstatus.",
+const scenarioRows = [
+  { name: "Geventileerd, gezonde longen", mech: "C 60, R 8 → τ 0.48 s", otis: "14.9 /min · 489 mL", iasv: "Otis-optimum binnen alle limieten" },
+  { name: "ARDS", mech: "C 30, R 12, PEEP 10 → τ 0.36 s", otis: "16.4 /min · 458 mL", iasv: "16.9 /min · 450 mL (ΔP ≤ 15 begrenst)" },
+  { name: "COPD", mech: "C 60, R 25, PEEPi 4 → τ 1.50 s", otis: "9.6 /min · 674 mL", iasv: "12.3 /min · 560 mL (8 mL/kg begrenst; f_max = 13.3)" },
 ];
+
+const iasvSteps = [
+  "Meet de longmechanica (RCexp, compliance, weerstand) per ademteug.",
+  "Bepaal het doelminuutvolume: %MinVol × 0.1 L/kg IBW/min (volwassene). Bij IntelliVent-ASV past de regelkring op PetCO₂ dit percentage automatisch aan.",
+  "Bereken met de Otis-vergelijking de doelfrequentie en het bijbehorende doel-VT.",
+  "Leg het doel binnen het veiligheidsvenster: minimale en maximale frequentie, minimaal VT en de drukgrens.",
+  "Lever drukgecontroleerde (passieve patiënt) of drukondersteunde (actieve patiënt) ademteugen en pas de inspiratiedruk per ademteug aan tot het doel-VT is bereikt.",
+];
+
+const references: { id: number; text: string; doi?: string }[] = [
+  { id: 1, text: "Otis AB, Fenn WO, Rahn H. Mechanics of breathing in man. J Appl Physiol. 1950;2:592–607.", doi: "10.1152/jappl.1950.2.11.592" },
+  { id: 2, text: "Mead J. Control of respiratory frequency. J Appl Physiol. 1960;15:325–336." },
+  { id: 3, text: "Radford EP. Ventilation standards for use in artificial respiration. J Appl Physiol. 1955;7:451–460.", doi: "10.1152/jappl.1955.7.4.451" },
+  { id: 4, text: "Laubscher TP, Heinrichs W, Weiler N, Hartmann G, Brunner JX. An adaptive lung ventilation controller. IEEE Trans Biomed Eng. 1994;41:51–59.", doi: "10.1109/10.277271" },
+  { id: 5, text: "Brunner JX, Laubscher TP, Banner MJ, Iotti G, Braschi A. Simple method to measure total expiratory time constant based on the passive expiratory flow-volume curve. Crit Care Med. 1995;23:1117–1122.", doi: "10.1097/00003246-199506000-00019" },
+  { id: 6, text: "Arnal JM, Wysocki M, Nafati C, et al. Automatic selection of breathing pattern using adaptive support ventilation. Intensive Care Med. 2008;34:75–81.", doi: "10.1007/s00134-007-0847-0" },
+  { id: 7, text: "Arnal JM, Wysocki M, Novotni D, et al. Safety and efficacy of a fully closed-loop control ventilation (IntelliVent-ASV) in sedated ICU patients with acute respiratory failure: a prospective randomized crossover study. Intensive Care Med. 2012;38:781–787.", doi: "10.1007/s00134-012-2548-6" },
+  { id: 8, text: "The Acute Respiratory Distress Syndrome Network. Ventilation with lower tidal volumes as compared with traditional tidal volumes for acute lung injury and the acute respiratory distress syndrome. N Engl J Med. 2000;342:1301–1308.", doi: "10.1056/NEJM200005043421801" },
+  { id: 9, text: "Amato MBP, Meade MO, Slutsky AS, et al. Driving pressure and survival in the acute respiratory distress syndrome. N Engl J Med. 2015;372:747–755.", doi: "10.1056/NEJMsa1410639" },
+  { id: 10, text: "Gattinoni L, Tonetti T, Cressoni M, et al. Ventilator-related causes of lung injury: the mechanical power. Intensive Care Med. 2016;42:1567–1575.", doi: "10.1007/s00134-016-4505-2" },
+  { id: 11, text: "Serpa Neto A, Deliberato RO, Johnson AEW, et al. Mechanical power of ventilation is associated with mortality in critically ill patients. Intensive Care Med. 2018;44:1914–1922.", doi: "10.1007/s00134-018-5375-6" },
+  { id: 12, text: "Chiumello D, Carlesso E, Cadringher P, et al. Lung stress and strain during mechanical ventilation for acute respiratory distress syndrome. Am J Respir Crit Care Med. 2008;178:346–355.", doi: "10.1164/rccm.200710-1589OC" },
+  { id: 13, text: "Protti A, Cressoni M, Santini A, et al. Lung stress and strain during mechanical ventilation: any safe threshold? Am J Respir Crit Care Med. 2011;183:1354–1362.", doi: "10.1164/rccm.201010-1757OC" },
+  { id: 14, text: "Pepe PE, Marini JJ. Occult positive end-expiratory pressure in mechanically ventilated patients with airflow obstruction: the auto-PEEP effect. Am Rev Respir Dis. 1982;126:166–170.", doi: "10.1164/arrd.1982.126.1.166" },
+  { id: 15, text: "de Durante G, del Turco M, Rustichini L, et al. ARDSNet lower tidal volume ventilatory strategy may generate intrinsic positive end-expiratory pressure in patients with acute respiratory distress syndrome. Am J Respir Crit Care Med. 2002;165:1271–1274.", doi: "10.1164/rccm.2105050" },
+  { id: 16, text: "Yoshida T, Torsani V, Gomes S, et al. Spontaneous effort causes occult pendelluft during mechanical ventilation. Am J Respir Crit Care Med. 2013;188:1420–1427.", doi: "10.1164/rccm.201303-0539OC" },
+  { id: 17, text: "Nuckton TJ, Alonso JA, Kallet RH, et al. Pulmonary dead-space fraction as a risk factor for death in the acute respiratory distress syndrome. N Engl J Med. 2002;346:1281–1286.", doi: "10.1056/NEJMoa012835" },
+];
+
+function Ref({ n }: { n: number | number[] }) {
+  const ids = Array.isArray(n) ? n : [n];
+  return (
+    <sup className="text-sky-400">
+      [
+      {ids.map((id, i) => (
+        <span key={id}>
+          {i > 0 && ","}
+          <a href={`#ref-${id}`} className="hover:underline">{id}</a>
+        </span>
+      ))}
+      ]
+    </sup>
+  );
+}
 
 export default function TheoryIASVPage() {
   return (
@@ -114,68 +150,78 @@ export default function TheoryIASVPage() {
 
       <main className="iasv-print-main max-w-6xl mx-auto px-6 py-8 space-y-8">
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Inleiding: waarom iASV bestaat</h2>
+          <h2 className="text-xl font-semibold text-white">Inleiding: ASV en iASV</h2>
           <p className="text-sm text-gray-300 leading-7">
-            Intelligent Adaptive Support Ventilation (iASV) combineert twee grote fysiologische inzichten: (1) energetische optimalisatie via Otis' klassieke werk uit 1950, en (2) het meenemen van longbeschermende veiligheidslimieten die sinds ARDS-netwerkstudies centraal staan. In plaats van vaste frequenties of volumes op te leggen, probeert iASV een dynamisch, adaptief werkpunt te vinden dat beide criteria respecteert.
+            Adaptive Support Ventilation (ASV) is een modus van Hamilton Medical waarin de clinicus een doelminuutvolume instelt en de ventilator zelf de combinatie van frequentie en teugvolume kiest<Ref n={4} />. Die keuze is gebaseerd op het werk van Otis, Fenn en Rahn uit 1950: bij een gegeven alveolaire ventilatie bestaat een frequentie waarbij de ademarbeid minimaal is<Ref n={1} />. ASV meet de longmechanica per ademteug, berekent dat optimum en legt het binnen een venster van veiligheidsregels.
           </p>
           <p className="text-sm text-gray-300 leading-7">
-            De centrale boodschap: <span className="text-yellow-300">normale longfysiologie bepaalt hoe de patiënt efficiënt ademt, maar bij kritieke ziekte moeten daar veiligheidslimieten omheen worden gezet</span>. iASV is daarin transparant: eerst het optimum bepalen, daarna begrenzen.
+            IntelliVent-ASV (iASV) voegt daar twee gesloten regelkringen aan toe: het minuutvolume wordt bijgesteld op basis van de eind-expiratoire CO₂ (PetCO₂), en PEEP en FiO₂ op basis van de SpO₂<Ref n={7} />. De keuze van frequentie en teugvolume binnen dat minuutvolume blijft het ASV-principe.
           </p>
+          <p className="text-sm text-gray-300 leading-7">
+            De kernboodschap: <span className="text-yellow-300">eerst het energetisch gunstigste ademhalingspatroon bepalen, daarna begrenzen met longbeschermende regels</span>.
+          </p>
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-sky-300 mb-2">Wat de simulator wel en niet doet</h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300 leading-6">
+              <li>De simulator gebruikt een longmodel met één compartiment, lineaire R en C, en sinusoïdale flow (de aanname van Otis). Een echte ASV-ademteug is drukgecontroleerd, met een afnemende flow.</li>
+              <li>Als invoer gebruikt de simulator de alveolaire ventilatie V̇A. ASV werkt met een doelminuutvolume, waaruit V̇A = V̇E − f·VD volgt. De PetCO₂- en SpO₂-regelkringen van iASV worden niet gesimuleerd.</li>
+              <li>De grenzen ΔP ≤ 15 cmH₂O, Pplat ≤ 30 cmH₂O en VT ≤ 8 mL/kg zijn didactische longbeschermende grenzen en geen Hamilton-instellingen. Het frequentievenster en het minimale VT volgen de ASV-regels.</li>
+            </ul>
+          </div>
         </section>
 
         {/* HISTORISCHE CONTEXT */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Historische achtergrond: Otis, Mead en de mechanica van de ademhaling</h2>
+          <h2 className="text-xl font-semibold text-white">Historische achtergrond</h2>
           <div className="space-y-4">
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-sky-300 mb-2">Charles Otis (1915–1993) en het optimale ventilatiemechanisme</h3>
+              <h3 className="text-base font-semibold text-sky-300 mb-2">Arthur B. Otis, Wallace Fenn en Hermann Rahn (1950)</h3>
               <p className="text-sm text-gray-300 leading-7">
-                Charles Otis werkte in het Walter Reed Army Hospital en bestudeerde de arbeidsfysiologie van de ademhaling. Zijn baanbrekende werk uit 1950 liet zien dat voor een gegeven metabole behoefte (V̇A) een <span className="text-yellow-300">optimale ademfrequentie</span> bestaat waarbij de totale ademarbeid minimaal is. Dat was revolutionair: ademhaling bleek niet willekeurig, maar het resultaat van een energetisch optimalisatieprobleem.
+                Aan de University of Rochester werkten Otis, Fenn en Rahn de mechanica van de ademhaling kwantitatief uit<Ref n={1} />. Zij splitsten de ademarbeid in een elastische component (rekken van long en thoraxwand) en een resistieve component (stroming door de luchtwegen). Vervolgens lieten ze zien dat er voor een gegeven alveolaire ventilatie een <span className="text-yellow-300">frequentie bestaat waarbij de totale arbeid minimaal is</span>, en dat de spontane ademfrequentie van gezonde proefpersonen daar dicht bij ligt.
               </p>
               <p className="text-sm text-gray-300 leading-7 mt-2">
-                Otis' kerninzicht: <span className="text-yellow-300">sneller ademen (hoog f, laag VT)</span> kost veel energie door resistief werk, maar <span className="text-yellow-300">langzamer ademen (laag f, hoog VT)</span> kost juist veel energie door elastisch werk. Er bestaat dus een evenwicht, en dat hangt af van de longmechanica (compliance, weerstand en dode ruimte).
+                Het kerninzicht: <span className="text-yellow-300">snel en ondiep ademen</span> kost resistief werk en verspilt ventilatie aan de dode ruimte; <span className="text-yellow-300">langzaam en diep ademen</span> kost elastisch werk. Het evenwicht hangt af van de tijdconstante τ = R·C en van de dode ruimte.
               </p>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-cyan-300 mb-2">John Mead (1927–2001) en het ontleden van ademarbeid</h3>
+              <h3 className="text-base font-semibold text-cyan-300 mb-2">John Mead (1960)</h3>
               <p className="text-sm text-gray-300 leading-7">
-                John Mead, een fysioloog aan Harvard, bouwde voort op Otis' werk. In plaats van de totale energie te bekijken, splitste Mead de ademarbeid op in componenten: <span className="text-yellow-300">elastisch werk, resistief werk en drempelwerk</span>. Dat leverde klinische inzichten op, bijvoorbeeld dat ARDS met lage compliance het elastische werk sterk verhoogt en dat obstructieve pathologie het resistieve werk doet toenemen.
+                Mead (Harvard School of Public Health) bouwde voort op dit model en stelde een ander optimalisatiecriterium voor: de ademhaling minimaliseert niet de arbeid maar de <span className="text-yellow-300">gemiddelde kracht</span> (drukamplitude) die de ademspieren moeten leveren<Ref n={2} />. Dat criterium sloot in zijn metingen beter aan bij de waargenomen frequenties, onder meer bij veranderde mechanica. Beide benaderingen voorspellen dezelfde richting: een kortere tijdconstante geeft een hogere optimale frequentie.
               </p>
               <p className="text-sm text-gray-300 leading-7 mt-2">
-                Mead's bijdrage maakte het mogelijk om beter te begrijpen <span className="text-yellow-300">waarom</span> bepaalde ventilatorinstellingen anders uitpakken. Zijn werk legde de basis voor moderne work-of-breathing (WOB)-metingen en concepten zoals "compliance penalty" en "resistance penalty".
+                ASV gebruikt de Otis-vergelijking; de naam &quot;Otis-Mead&quot; in deze simulator verwijst naar deze gezamenlijke fysiologische basis.
               </p>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-green-300 mb-2">Van klassieke fysiologie naar moderne ARDS-era</h3>
+              <h3 className="text-base font-semibold text-green-300 mb-2">Van fysiologie naar longbescherming</h3>
               <p className="text-sm text-gray-300 leading-7">
-                Tot ongeveer 1990 lag de nadruk vooral op energetische efficiëntie. Daarna veranderde het denken radicaal: ARDSnet (Acute Respiratory Distress Syndrome Network) toonde in een baanbrekende trial in 2000 aan dat lage-tidal-volumeventilatie (6 mL/kg IBW) in vergelijking met 12 mL/kg de sterfte met 22% verlaagde. Daarmee begon de era van <span className="text-yellow-300">longbeschermende ventilatie</span>.
+                In 1994 beschreven Laubscher, Brunner en collega&apos;s deze regelaar, toen nog Adaptive Lung Ventilation genoemd: de clinicus stelde een gewenste alveolaire ventilatie in en het toestel koos frequentie en inspiratiedruk op basis van de gemeten mechanica en dode ruimte<Ref n={4} />. In 2000 liet de ARDS Network-studie zien dat 6 mL/kg IBW in plaats van 12 mL/kg de mortaliteit bij ARDS verlaagde van 39.8% naar 31.0%<Ref n={8} />. Daarna volgden driving pressure<Ref n={9} /> en mechanisch vermogen<Ref n={10} /> als maten voor ventilatorgeïnduceerde longschade.
               </p>
               <p className="text-sm text-gray-300 leading-7 mt-2">
-                Daarna volgden de inzichten elkaar snel op: driving pressure als prognostische factor (Amato et al. 2015), auto-PEEP als verborgen vijand, heterogene ventilatie en cycli van recruitment en derecruitment. Modern ventilatormanagement is dus: <span className="text-yellow-300">energetische efficiëntie UIT, veiligheid EERST</span>.
+                Modern beademingsbeleid luidt daarom: <span className="text-yellow-300">efficiëntie nastreven binnen strikte veiligheidsgrenzen</span>.
               </p>
             </div>
           </div>
         </section>
 
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Symbolen, Eenheden en Definities</h2>
-          <p className="text-xs text-gray-400 mb-4">Uitgebreide tabel met fysiologische en klinische parameters</p>
+          <h2 className="text-xl font-semibold text-white mb-4">Symbolen, eenheden en definities</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs md:text-sm">
               <thead>
                 <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-800">
                   <th className="py-2 px-3 font-semibold">Symbool</th>
                   <th className="py-2 px-3 font-semibold">Eenheid</th>
-                  <th className="py-2 px-3 font-semibold">Beschrijving & Context</th>
+                  <th className="py-2 px-3 font-semibold">Beschrijving en context</th>
                 </tr>
               </thead>
               <tbody>
                 {symbolRows.map((row) => (
                   <tr key={row.sym} className="border-b border-gray-800 align-top hover:bg-gray-800/50">
                     <td className="py-2 px-3 font-mono text-sky-300">{row.sym}</td>
-                    <td className="py-2 px-3 text-gray-400 font-mono text-xs">{row.unit}</td>
+                    <td className="py-2 px-3 text-gray-400 font-mono text-xs whitespace-nowrap">{row.unit}</td>
                     <td className="py-2 px-3 text-gray-300">{row.desc}</td>
                   </tr>
                 ))}
@@ -186,34 +232,20 @@ export default function TheoryIASVPage() {
 
         {/* OTIS SECTIE */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Otis-principe: energetische optimalisatie van frequentie en volume</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Het Otis-optimum: frequentie en teugvolume</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <h3 className="text-base font-semibold text-yellow-300 mb-2">Het kernprobleem</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Stel: een patiënt heeft een vastgestelde metabole behoefte (V̇A = 4 L/min). Die V̇A kan bereikt worden via oneindig veel combinaties van f en VT:
+              Stel: V̇A = 4 L/min en VD = 150 mL. Omdat V̇A = (VT − VD)·f, kan dezelfde alveolaire ventilatie met oneindig veel combinaties worden bereikt:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300 mt-2">
-              <li>f=10 bpm, VT=500 mL (langzaam, diep)</li>
-              <li>f=20 bpm, VT=250 mL (normaal)</li>
-              <li>f=40 bpm, VT=125 mL (snel, ondiep)</li>
+              <li>f = 10/min, VT = 550 mL (langzaam en diep)</li>
+              <li>f = 20/min, VT = 350 mL</li>
+              <li>f = 40/min, VT = 250 mL (snel en ondiep; 60% van elke teug is dode ruimte)</li>
             </ul>
             <p className="text-sm text-gray-300 leading-7 mt-2">
-              Welke combinatie kost de minste <span className="text-yellow-300">energie</span> (work-of-breathing)? Otis' antwoord: er bestaat een <span className="text-yellow-300">optimaal punt</span>, en dat hangt af van de longmechanica (R, C, τ en VD).
-            </p>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-yellow-300 mb-2">Wiskundige Afleiding</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">Otis hanteerde een energiebenadering:</p>
-            <div className="bg-gray-900 rounded-lg p-3 font-mono text-xs text-cyan-300 space-y-1 overflow-x-auto">
-              <p>W_tot (per minuut) = f·60·[W_el(VT) + W_res(f,VT) + W_iPEEP(VT)]</p>
-              <p>W_el = VT²/(2·C)  [elastisch werk]</p>
-              <p>W_res = (π²·R·f·VT²)/4  [inspiratoir resistief werk]</p>
-              <p>W_iPEEP = PEEPi·VT  [drempelwerk]</p>
-            </div>
-            <p className="text-sm text-gray-300 leading-7 mt-2">
-              Voor een gegeven V̇A geldt: <span className="font-mono text-cyan-300">VT = V̇A/f + VD</span>. Als je dat invult in W_tot en vervolgens naar f minimaliseert, krijg je Otis' vergelijking.
+              Welke combinatie kost de minste <span className="text-yellow-300">ademarbeid</span>? Het antwoord van Otis: er is één optimum, en dat hangt alleen af van τ en V̇A/VD.
             </p>
           </div>
 
@@ -230,37 +262,67 @@ export default function TheoryIASVPage() {
             <h3 className="text-base font-semibold text-yellow-300 mb-2">Klinische interpretatie</h3>
             <ul className="space-y-2 text-sm text-gray-300 leading-7">
               <li>
-                <span className="text-sky-300">↑ Compliance (C):</span> f_opt stijgt licht (elastisch werk minder pijnlijk, dus meer frequentie verdraaglijk).
+                <span className="text-sky-300">Lage compliance (restrictief, ARDS):</span> τ wordt korter, dus f_opt stijgt en VT_opt daalt. Snel en ondiep ademen is bij een stijve long energetisch gunstig.
               </li>
               <li>
-                <span className="text-sky-300">↓ Compliance (C):</span> f_opt daalt (ARDS: langzamer ademen, dieper, minder energieverspilling).
+                <span className="text-sky-300">Hoge weerstand (obstructief, COPD, astma):</span> τ wordt langer, dus f_opt daalt en VT_opt stijgt. Langzaam en diep ademen geeft bovendien meer expiratietijd.
               </li>
               <li>
-                <span className="text-sky-300">↑ Weerstand (R):</span> f_opt daalt sterk (resistief werk neemt toe, dus lagere frequentie beter).
+                <span className="text-sky-300">Grotere dode ruimte bij gelijke V̇A:</span> f_opt daalt en VT_opt stijgt, omdat elke teug relatief minder verspilt. Het benodigde minuutvolume neemt wel toe.
               </li>
               <li>
-                <span className="text-sky-300">↑ τ (=R×C, trage long):</span> f_opt ↓ (COPD patiënten hebben lagere natuurlijke frequentie).
+                <span className="text-sky-300">Hogere V̇A-behoefte (koorts, acidose):</span> f_opt stijgt.
               </li>
               <li>
-                <span className="text-sky-300">↑ Auto-PEEP (PEEPi):</span> extra energiekosten; W_iPEEP domineert en verhoogt W_tot aanzienlijk.
+                <span className="text-sky-300">Auto-PEEP:</span> komt niet voor in de Otis-vergelijking, maar verhoogt de arbeid van een spontaan ademende patiënt met PEEPi·VT per teug.
               </li>
             </ul>
+            <p className="text-sm text-gray-300 leading-7 mt-2">
+              Arnal en collega&apos;s zagen precies deze patronen bij ASV-patiënten: bij restrictieve longziekte koos ASV een hogere frequentie met een kleiner VT, bij obstructieve longziekte een lagere frequentie met een groter VT<Ref n={6} />.
+            </p>
+          </div>
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-yellow-300 mb-2">Voorbeelden uit de simulator</h3>
+            <p className="text-xs text-gray-400 mb-2">V̇A 5 L/min, IBW 70 kg (VD 154 mL), druklimiet 30 cmH₂O. C in mL/cmH₂O, R in cmH₂O·s/L.</p>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs md:text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="py-2 pr-3 font-semibold">Scenario</th>
+                    <th className="py-2 px-3 font-semibold">Mechanica</th>
+                    <th className="py-2 px-3 font-semibold">Otis-optimum</th>
+                    <th className="py-2 pl-3 font-semibold">iASV-werkpunt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scenarioRows.map((row) => (
+                    <tr key={row.name} className="border-b border-gray-800 align-top">
+                      <td className="py-2 pr-3 text-gray-200">{row.name}</td>
+                      <td className="py-2 px-3 text-gray-400 font-mono text-xs">{row.mech}</td>
+                      <td className="py-2 px-3 text-yellow-300 font-mono text-xs">{row.otis}</td>
+                      <td className="py-2 pl-3 text-green-300 font-mono text-xs">{row.iasv}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
-        {/* MEAD SECTIE */}
+        {/* COMPONENTEN VAN ADEMARBEID */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Mead-principe: ontleding van ademarbeid in componenten</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Componenten van ademarbeid</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-cyan-300 mb-2">Waarom componenten ontleden?</h3>
+            <h3 className="text-base font-semibold text-cyan-300 mb-2">Waarom componenten onderscheiden?</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Otis zei: <span className="text-yellow-300">"er is een optimum"</span>. Mead voegde toe: <span className="text-yellow-300">"begrijp waarom"</span>. Door de ademarbeid in drie fysische componenten te splitsen, worden de mechanismen zichtbaar. Dat maakt klinische beslissingen beter te volgen.
+              Door de arbeid op te splitsen wordt zichtbaar <span className="text-yellow-300">welk mechanisme</span> het optimum bepaalt en waarom een ziektebeeld het ademhalingspatroon verschuift. De bewegingsvergelijking van het respiratoire systeem is P = PEEP_tot + V/C + R·V̇: elke term levert een eigen arbeidscomponent.
             </p>
           </div>
 
           <div className="space-y-3">
-            {meadRows.map((item) => (
+            {workRows.map((item) => (
               <div key={item.formula} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                 <p className="text-xs md:text-sm font-mono text-cyan-300 break-words mb-1">{item.formula}</p>
                 <p className="text-sm text-gray-300 leading-6">{item.explain}</p>
@@ -269,342 +331,315 @@ export default function TheoryIASVPage() {
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-cyan-300 mb-2">Praktische vraag: wanneer domineert welke component?</h3>
+            <h3 className="text-base font-semibold text-cyan-300 mb-2">Welke component domineert?</h3>
             <div className="space-y-3 text-sm text-gray-300">
               <div className="pl-3 border-l-2 border-sky-400">
-                <span className="text-sky-300 font-semibold">Normaal longweefsel (C ~100 mL/cmH₂O, R ~5 cmH₂O·s/L):</span>
-                <p className="mt-1">W_el klein, W_res klein, W_iPEEP nul (geen auto-PEEP). Totaal laag. Natuurlijke f ~12-20 bpm.</p>
+                <span className="text-sky-300 font-semibold">Gezonde longen (C ≈ 60, R ≈ 8):</span>
+                <p className="mt-1">Elastisch en resistief werk zijn beide bescheiden; geen auto-PEEP. f_opt rond 14–15/min.</p>
               </div>
               <div className="pl-3 border-l-2 border-yellow-400">
-                <span className="text-yellow-300 font-semibold">ARDS-long (C ~30 mL/cmH₂O, R ~20 cmH₂O·s/L):</span>
-                <p className="mt-1">W_el EXPLODEERT (1/C ×3,3). Alleen al elastisch werk &gt;50% van totaal. W_res ook ↑ door tubussen/circuit. f_opt ↓↓ naar 8-12 bpm.</p>
+                <span className="text-yellow-300 font-semibold">ARDS (C ≈ 25–35, R ≈ 10–15):</span>
+                <p className="mt-1">Het elastische werk per liter is twee keer zo hoog. Omdat τ kort is, verschuift het optimum naar een hogere frequentie met een kleiner VT. Driving pressure en plateaudruk worden de beperkende grenzen.</p>
               </div>
               <div className="pl-3 border-l-2 border-orange-400">
-                <span className="text-orange-300 font-semibold">COPD/obstructie (R ~30-50, C normaal, PEEPi ~5-15 cmH₂O):</span>
-                <p className="mt-1">W_res stijgt kwadratisch met f. Auto-PEEP domineert. f_opt daalt, en de patiënt krijgt last van air trapping. W_iPEEP kan 40-50% van het totaal uitmaken.</p>
+                <span className="text-orange-300 font-semibold">COPD of astma (R ≥ 20, C normaal of hoog, PEEPi 3–15):</span>
+                <p className="mt-1">Resistief werk domineert en τ is lang. Het optimum ligt bij een lage frequentie met een groot VT, wat ook de expiratietijd verlengt. Bij spontane ademhaling komt daar het drempelwerk van PEEPi bij.</p>
               </div>
               <div className="pl-3 border-l-2 border-pink-400">
-                <span className="text-pink-300 font-semibold">Neuromusculaire zwakte (patiënt kan niet hard inspireren):</span>
-                <p className="mt-1">Hoog VT is lastig, dus f↑. W_res neemt toe met f. Paradoxaal genoeg betekent dat meer arbeid voor minder V̇A. Ondersteuning is dan nodig.</p>
+                <span className="text-pink-300 font-semibold">Neuromusculaire zwakte:</span>
+                <p className="mt-1">De mechanica kan normaal zijn, maar de spierkracht schiet tekort. Patiënten ademen snel en ondiep, waardoor een groter deel van de ventilatie dode ruimte is. Ondersteuning verlaagt de last op de spieren.</p>
               </div>
             </div>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-cyan-300 mb-2">Grafische gedachte: werkoppervlakken</h3>
+            <h3 className="text-base font-semibold text-cyan-300 mb-2">Grafisch: het f·VT-vlak</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Zet VT op de x-as en f op de y-as. Voor een gegeven V̇A kun je alle "zelf-consistente" (f, VT)-punten plotten. Kleur je elk punt naar W_tot, dan krijg je een oppervlak. Het laagste punt in dat oppervlak is het Otis-optimum. Als je vervolgens <span className="text-yellow-300">niet mag kiezen uit alle punten (bijv. VT &lt;= 400 mL door een drukgrens)</span>, zoek je het laagste punt in de <span className="text-yellow-300">toegestane zone</span>. Dat kan anders zijn dan het onbeperkte optimum; precies dat doet iASV.
+              Zet f op de x-as en VT op de y-as (zoals in de simulator). Alle combinaties met dezelfde V̇A liggen op de hyperbool VT = V̇A/f + VD. Langs die hyperbool heeft de arbeid één minimum: het Otis-optimum. Veiligheidsregels snijden delen van de hyperbool af. Valt het optimum in een verboden deel, dan kiest iASV het <span className="text-yellow-300">dichtstbijzijnde toegestane punt op dezelfde hyperbool</span>, zodat V̇A gelijk blijft.
             </p>
           </div>
         </section>
 
         {/* IASV BESLISLOGICA */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">iASV-algoritme: van theorie naar klinische implementatie</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Het ASV-algoritme: van theorie naar beademing</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-green-300 mb-2">Vijfstappenprocedure</h3>
+            <h3 className="text-base font-semibold text-green-300 mb-2">Werking in stappen</h3>
             <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-300 leading-6">
               {iasvSteps.map((step, idx) => (
-                <li key={idx}><span className="text-green-300 font-semibold">Stap {idx+1}:</span> {step}</li>
+                <li key={idx}>{step}</li>
               ))}
             </ol>
+            <p className="text-xs text-gray-400 leading-6 mt-3">
+              ASV bepaalt RCexp uit de passieve expiratoire flow-volumecurve<Ref n={5} />. De simulator berekent τ uit de ingestelde R en C.
+            </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-green-300 mb-2">Gedetailleerde veiligheidslimieten</h3>
+            <h3 className="text-base font-semibold text-green-300 mb-2">Veiligheidsregels van ASV</h3>
+            <p className="text-xs text-gray-400 mb-3">Samengevat uit de literatuur en de fabrikantdocumentatie. De exacte waarden verschillen per softwareversie; de handleiding van het toestel is leidend.</p>
             <div className="space-y-3 text-sm">
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                <p className="text-pink-300 font-mono mb-1">Ppeak ≤ P_limit (bijv. 30 cmH₂O)</p>
-                <p className="text-gray-300 text-xs leading-6">Piekdruk is de stuwkracht. Formule: <span className="font-mono">Ppeak = PEEP_tot + VT/C + R·π·f·VT</span>. Risico op druktrauma.</p>
+                <p className="text-pink-300 font-mono mb-1">f ≤ 20 / RCexp</p>
+                <p className="text-gray-300 text-xs leading-6">Laat minstens 1τ inspiratietijd en 2τ expiratietijd over, om dynamische hyperinflatie (auto-PEEP) te beperken. In de simulator geldt daarnaast 5 ≤ f ≤ 60/min.</p>
               </div>
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                <p className="text-pink-300 font-mono mb-1">Pplat ≤ 30 cmH₂O (ARDSnet standard)</p>
-                <p className="text-gray-300 text-xs leading-6">Plateaudruk is de elastische druk. <span className="font-mono">Pplat = PEEP_tot + VT/C</span>. Prognostisch belangrijk.</p>
+                <p className="text-pink-300 font-mono mb-1">VT ≥ 2 × VD</p>
+                <p className="text-gray-300 text-xs leading-6">Voorkomt dode-ruimteventilatie: bij een te klein VT bereikt te weinig verse lucht de alveoli.</p>
               </div>
               <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                <p className="text-pink-300 font-mono mb-1">ΔP = Pplat - PEEP_tot ≤ 13-15 cmH₂O</p>
-                <p className="text-gray-300 text-xs leading-6">Driving pressure. Sterke predictor voor uitkomst (Amato et al. 2015) en belangrijker dan absolute Pplat.</p>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                <p className="text-pink-300 font-mono mb-1">VT/kg ≤ 6-8 mL/kg IBW</p>
-                <p className="text-gray-300 text-xs leading-6">Preventie van longvolumetrauma. 6 mL/kg is de ARDSnet-gold standard voor ARDS.</p>
-              </div>
-              <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
-                <p className="text-pink-300 font-mono mb-1">PEEPi ≤ 5 cmH₂O (ideaal)</p>
-                <p className="text-gray-300 text-xs leading-6">Auto-PEEP-limiet. Bij COPD of obstructie kan dit lastig zijn. Balans: recruitment versus air trapping.</p>
+                <p className="text-pink-300 font-mono mb-1">Pinsp ≤ drukgrens</p>
+                <p className="text-gray-300 text-xs leading-6">ASV houdt de inspiratiedruk onder een marge van de ingestelde maximale druk. In het sinusoïdale model van de simulator geldt: Ppeak = PEEP_tot + VT·[1/(2C) + √(1/(4C²) + (π·R·f)²)].</p>
               </div>
             </div>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-green-300 mb-2">VT_ceiling bepalen: de meest restrictieve limiet wint</h3>
+            <h3 className="text-base font-semibold text-green-300 mb-2">Aanvullende longbeschermende grenzen (didactisch)</h3>
+            <div className="space-y-3 text-sm">
+              <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                <p className="text-pink-300 font-mono mb-1">Pplat = PEEP_tot + VT/C ≤ 30 cmH₂O</p>
+                <p className="text-gray-300 text-xs leading-6">Grens uit het ARDS Network-protocol<Ref n={8} />. Bij een stijve thoraxwand (obesitas, buikcompartiment) overschat Pplat de transpulmonale druk.</p>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                <p className="text-pink-300 font-mono mb-1">ΔP = VT/C ≤ 15 cmH₂O</p>
+                <p className="text-gray-300 text-xs leading-6">Bij ARDS was een hogere driving pressure sterker geassocieerd met mortaliteit dan VT of Pplat afzonderlijk<Ref n={9} />.</p>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                <p className="text-pink-300 font-mono mb-1">VT ≤ 8 mL/kg IBW</p>
+                <p className="text-gray-300 text-xs leading-6">Bovengrens van het ARDS Network-bereik; het doel is 6 mL/kg (4–8)<Ref n={8} />.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-green-300 mb-2">Het gekozen werkpunt</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Voor elke limiet bereken je: <span className="text-yellow-300">"welk VT kan ik maximaal gebruiken?"</span> Bijvoorbeeld:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-gray-300 mt-2 font-mono text-xs">
-              <li>Uit Ppeak: VT_ceiling_ppeak = (P_limit - PEEP_tot - R·π·f·VT) × C  [eigenlijk iteratief]</li>
-              <li>Uit ΔP: VT_ceiling_dp = 13 × C</li>
-              <li>Uit VT/kg: VT_ceiling_kg = 6 × IBW</li>
-              <li>Kies: VT_ceiling = MIN(VT_ceiling_ppeak, VT_ceiling_dp, VT_ceiling_kg, ...)</li>
-            </ul>
-            <p className="text-sm text-gray-300 leading-7 mt-2">
-              <span className="text-yellow-300">Dit is waar iASV transparant wordt:</span> je ziet <span className="text-yellow-300">welke limiet dominant is</span>. In ARDS domineert meestal ΔP of VT/kg; in COPD is dat vaak PEEPi of air trapping.
+              Elke regel snijdt een stuk van de V̇A-hyperbool af. Een grens op VT (ΔP, Pplat, VT/kg) verbiedt lage frequenties; f_max en VT_min verbieden hoge frequenties. De drukgrens hangt van VT én f af en wordt daarom langs de hyperbool opgelost. De simulator kiest het toegestane punt waarvan f het dichtst bij f_opt ligt en meldt welke regel dat punt bepaalt. Als geen enkel punt aan alle regels voldoet, meldt de simulator dat er geen veilig werkpunt is: dan moet het V̇A-doel of de instelling worden heroverwogen.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-green-300 mb-2">Aanpassingslogica</h3>
+            <h3 className="text-base font-semibold text-green-300 mb-2">Rekenvoorbeeld</h3>
             <p className="text-sm text-gray-300 leading-7 mb-2">
-              Scenario: f_opt = 15 bpm, VT_opt = 450 mL, maar VT_ceiling = 320 mL (wegens ΔP grens).
+              Stel: V̇A = 4 L/min, VD = 150 mL en f_opt = 15/min (VT_opt ≈ 417 mL). De driving pressure-grens staat maximaal VT = 320 mL toe.
             </p>
             <p className="text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded">
-              VT_actual = 320 mL (pas aan naar het plafond)<br/>
-              f_actual = V̇A / (VT_actual - VD) × 60  [houd V̇A constant, verhoog f]<br/>
-              f_actual = 4 / (0.32 - 0.15) × 60 = 4 / 0.17 × 60 ≈ 1412 bpm ?? [fout, opnieuw berekenen]
+              f = V̇A / (VT − VD) = 4000 mL/min / (320 − 150) mL ≈ 23.5/min
             </p>
             <p className="text-sm text-gray-300 leading-7 mt-2">
-              Eigenlijk: als V̇A = (VT - VD) × f, dan geldt f = V̇A / (VT - VD). Met VT_actual = 320 mL, VD = 150 mL en V̇A = 4 L/min:
-            </p>
-            <p className="text-sm text-gray-300 leading-7 font-mono bg-gray-900 p-2 rounded">
-              f_actual = 4000 mL/min / (320 - 150) mL = 4000 / 170 ≈ 23.5 bpm
-            </p>
-            <p className="text-sm text-gray-300 leading-7 mt-2">
-              Dus in dit geval: <span className="text-yellow-300">de frequentie moet stijgen van 15 naar ongeveer 24 bpm</span> om dezelfde V̇A te handhaven. Dat is een <span className="text-yellow-300">veiligheidsgebonden compromis</span>.
+              Om dezelfde V̇A te houden, moet de frequentie stijgen van 15 naar ongeveer 24/min. Controleer daarna of 23.5/min nog onder f_max = 20/τ ligt: bij τ = 0.5 s is dat 40/min.
             </p>
           </div>
         </section>
 
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Hoe je dit kort kunt samenvatten</h2>
+          <h2 className="text-xl font-semibold text-white">Samenvatting</h2>
           <p className="text-sm text-gray-300 leading-7">
-            iASV is geen black box die zomaar een frequentie kiest. Het is een gecontroleerde optimalisatie: eerst een energetisch optimum op basis van klassieke fysiologie, daarna begrenzing door longbeschermende veiligheidsregels. Als de patiëntmechanica verandert, verschuift het optimum mee, maar de veiligheidslimieten blijven strikt bewaakt.
+            ASV is geen black box. Het is een gecontroleerde optimalisatie: eerst een energetisch optimum op basis van klassieke fysiologie, daarna begrenzing door veiligheidsregels. Verandert de mechanica, dan verschuift het optimum mee; de regels blijven gelden.
           </p>
           <p className="text-sm text-gray-300 leading-7">
-            In discussies helpt deze zin: <span className="text-yellow-300">"Otis bepaalt waar het efficiënt is, Mead verklaart waarom, en iASV beslist pas definitief nadat alle veiligheidslimieten zijn toegepast."</span>
+            In één zin: <span className="text-yellow-300">&quot;Otis bepaalt waar het efficiënt is, de componenten van ademarbeid verklaren waarom, en de veiligheidsregels bepalen waar het mag.&quot;</span>
           </p>
         </section>
 
-        {/* BIOLOGISCHE MECHANICA */}
+        {/* RESPIRATOIRE MECHANICA */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Biologische mechanica: dieper inzicht in long- en thoraxfysiologie</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Respiratoire mechanica in de praktijk</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-blue-300 mb-2">Compliance: Elastische Eigenschappen van Long en Thorax</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              Compliance (C) is geen statische waarde; het verandert met volume, positie, en pathologie.
-            </p>
+            <h3 className="text-base font-semibold text-blue-300 mb-2">Compliance</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-blue-300 font-semibold">Statische compliance (Cstat):</span> gemeten zonder stroming, dus zuiver elastisch. Cstat = VT / (Pplat - PEEP).</li>
-              <li><span className="text-blue-300 font-semibold">Dynamische compliance (Cdyn):</span> met stroming erin. Cdyn = VT / (Ppeak - PEEP). Cdyn &lt; Cstat bij obstructieve pathologie.</li>
-              <li><span className="text-blue-300 font-semibold">Volume-afhankelijkheid:</span> compliance is niet lineair. Bij hoge volumes (overinflatie) daalt C. Bij zeer lage volumes (atelectase) ook. Optimum ergens in het midden.</li>
-              <li><span className="text-blue-300 font-semibold">Positie-effect:</span> ruglig &gt; zijligging &gt; buikligging (in supine ARDS is compliance laag).</li>
-              <li><span className="text-blue-300 font-semibold">PEEP-effect:</span> PEEP kan compliance verbeteren door recruitment, maar teveel PEEP veroorzaakt overdistensie.</li>
+              <li><span className="text-blue-300 font-semibold">Statisch en dynamisch:</span> Cstat = VT / (Pplat − PEEP_tot) beschrijft de elastische eigenschappen. Cdyn = VT / (Ppeak − PEEP_tot) bevat ook de weerstand en is daarom geen zuivere compliance.</li>
+              <li><span className="text-blue-300 font-semibold">Volumeafhankelijk:</span> de druk-volumecurve is sigmoïdaal. Bij laag volume (collaps) en bij hoog volume (overrekking) is de compliance lager.</li>
+              <li><span className="text-blue-300 font-semibold">Long en thoraxwand:</span> een stijve thoraxwand (obesitas, intra-abdominale hypertensie) verlaagt de systeemcompliance zonder dat de long zelf zwaarder belast wordt. Slokdarmdrukmeting onderscheidt beide.</li>
+              <li><span className="text-blue-300 font-semibold">PEEP:</span> kan compliance verbeteren door recruitment, maar te veel PEEP veroorzaakt overrekking en verlaagt haar weer.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-blue-300 mb-2">Weerstand: Stroming, Viscositeit, Turbulentie</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              Weerstand is niet lineair. Het hangt af van stroompatroon en Reynoldsgetal.
-            </p>
+            <h3 className="text-base font-semibold text-blue-300 mb-2">Weerstand</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-blue-300 font-semibold">Laminar vs. turbulent:</span> bij lage stroming (laag Re) geldt Poiseuille (R ∝ viscositeit); bij hoge stroming (hoog Re) groeit R met stroming² (turbulentie-effect).</li>
-              <li><span className="text-blue-300 font-semibold">Circuit-weerstand:</span> endotraheale buis, filter, circuit-lijnen dragen bij. Dit kan 30-50% van totale R zijn!</li>
-              <li><span className="text-blue-300 font-semibold">Diepe obstructie:</span> bronchitis, bronchioloïitis (viraal) verhoogt R exponentieel. COPD-patiënten kunnen R &gt; 40 cmH₂O·s/L hebben.</li>
-              <li><span className="text-blue-300 font-semibold">Frequentie-effect:</span> bij zeer hoge frequentie (&gt;40 bpm) worden turbulente effecten merkbaar; R gedraagt zich niet-lineair.</li>
+              <li><span className="text-blue-300 font-semibold">Flowafhankelijk:</span> volgens Rohrer is ΔP = K₁·V̇ + K₂·V̇². Bij turbulente stroming neemt de schijnbare weerstand dus toe met de flow. Het model in de simulator neemt R constant.</li>
+              <li><span className="text-blue-300 font-semibold">Tube en circuit:</span> de endotracheale tube is bij geïntubeerde patiënten vaak een groot deel van de totale weerstand, vooral bij een kleine diameter.</li>
+              <li><span className="text-blue-300 font-semibold">Obstructie:</span> bronchospasme, slijm en dynamische luchtwegcollaps (COPD) verhogen R; bij een ernstige astma-aanval kan R ruim boven 20 cmH₂O·s/L liggen.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-blue-300 mb-2">Dode Ruimte: Anatomie vs. Fysiologie</h3>
+            <h3 className="text-base font-semibold text-blue-300 mb-2">Dode ruimte</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-blue-300 font-semibold">Anatomische dode ruimte (VDanat):</span> ~150 mL, vast (mondholte tot terminale bronchioli).</li>
-              <li><span className="text-blue-300 font-semibold">Alveolaire dode ruimte (VDalv):</span> geventileerde maar niet-geperfundeerde alvéolen (V/Q &gt;&gt; 1). Stijgt in ARDS (lokaal collapse), longembolie (vaatobstructie), cardiogeen shock (hypoperfusie).</li>
-              <li><span className="text-blue-300 font-semibold">Fysiologische dode ruimte (VD = VDanat + VDalv):</span> Kan stijgen van 150 mL (gezond) naar 400-600 mL (ARDS). Dit vergroot f_opt aanzienlijk!</li>
+              <li><span className="text-blue-300 font-semibold">Luchtwegdode ruimte:</span> ongeveer 2.2 mL/kg IBW, ongeveer 150 mL bij een volwassene<Ref n={3} />. Bij een geïntubeerde patiënt vervangt de tube een deel van de bovenste luchtweg; HME-filter en connectoren voegen apparatuurdode ruimte toe.</li>
+              <li><span className="text-blue-300 font-semibold">Alveolaire dode ruimte:</span> geventileerde maar niet-geperfundeerde alveoli. Neemt toe bij ARDS, longembolie en lage cardiac output.</li>
+              <li><span className="text-blue-300 font-semibold">Fysiologische dode ruimte:</span> de som van beide, te meten met de Bohr-Enghoff-vergelijking. Bij ARDS is een hoge VD/VT geassocieerd met hogere mortaliteit<Ref n={17} />. ASV schat alleen de luchtwegdode ruimte; extra alveolaire dode ruimte vraagt een hoger %MinVol, wat iASV via PetCO₂ automatisch probeert te doen.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-blue-300 mb-2">Tijdconstante (τ) en Expiratiodynamica</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              τ = R × C bepaalt hoe snel een eenheid "op" of "af" ventileert.
-            </p>
+            <h3 className="text-base font-semibold text-blue-300 mb-2">Tijdconstante en expiratie</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-blue-300 font-semibold">Normale waarden:</span> τ ≈ 0.3-0.5 s. 95% vulling in ~3τ = 1-1.5 s.</li>
-              <li><span className="text-blue-300 font-semibold">COPD:</span> τ kan 1-2 s zijn (hoge R). Expiratie duurt veel langer. PEEPi ontstaat gemakkelijk.</li>
-              <li><span className="text-blue-300 font-semibool">ARDS:</span> τ normaal of laag (compliance ↓, dus τ ↓), maar heterogeen (sommige eenheden τ↑, andere τ↓).</li>
-              <li><span className="text-blue-300 font-semibold">Auto-PEEP mechanisme:</span> als expiratieduur &lt; 3τ, voltooit de long niet zijn expiratie. Residual volume=PEEPi bouwt op.</li>
+              <li><span className="text-blue-300 font-semibold">Normale waarden:</span> geventileerd ongeveer 0.4–0.7 s, dus 95% lediging in 1.2–2 s.</li>
+              <li><span className="text-blue-300 font-semibold">Obstructie:</span> τ van 1–2 s of meer. Een volledige expiratie duurt dan langer dan de beschikbare tijd, waardoor auto-PEEP ontstaat.</li>
+              <li><span className="text-blue-300 font-semibold">ARDS:</span> τ is meestal kort door de lage compliance, maar regionaal heterogeen.</li>
+              <li><span className="text-blue-300 font-semibold">Auto-PEEP:</span> als de expiratietijd korter is dan ongeveer 3τ, begint de volgende inspiratie voordat het evenwichtsvolume is bereikt. Ook bij ARDS kan dit optreden, bijvoorbeeld bij een hoge frequentie met een laag VT<Ref n={15} />.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-blue-300 mb-2">Intrinsic PEEP (Auto-PEEP): Een Verborgen Vijand</h3>
+            <h3 className="text-base font-semibold text-blue-300 mb-2">Intrinsieke PEEP (auto-PEEP)</h3>
             <p className="text-sm text-gray-300 leading-7 mb-2">
-              Auto-PEEP is <span className="text-yellow-300">ongewenst</span> residueel-volumeniveau aan eind-expiratie. Het veroorzaakt:
+              Auto-PEEP werd beschreven door Pepe en Marini<Ref n={14} /> en heeft deze gevolgen:
             </p>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-blue-300 font-semibold">Extra drempelwerk (W_iPEEP):</span> inspiratiemuscels moeten eerst ~PEEPi overwinnen voordat lucht instroomt.</li>
-              <li><span className="text-blue-300 font-semibold">Myocardiale compressie:</span> rechterkamer preload daalt; linkerkamer preload stijgt (interdependentie).</li>
-              <li><span className="text-blue-300 font-semibold">Barotrauma risico:</span> totale PEEP = PEEPe + PEEPi kan hoog worden.</li>
-              <li><span className="text-blue-300 font-semibold">Detectie:</span> inspiratie-occlusion (ventilator-trigger blokkeert expiratie; druk stijgt tot PEEPi gecompenseerd is).</li>
+              <li><span className="text-blue-300 font-semibold">Triggerlast:</span> een spontaan ademende patiënt moet eerst PEEPi overwinnen voordat de ventilator triggert. Dat kan leiden tot ineffectieve triggerpogingen.</li>
+              <li><span className="text-blue-300 font-semibold">Hemodynamiek:</span> de hogere intrathoracale druk vermindert de veneuze terugvloed (lagere preload van rechter- en linkerkamer) en kan de afterload van de rechterkamer verhogen. Dit kan leiden tot hypotensie.</li>
+              <li><span className="text-blue-300 font-semibold">Hyperinflatie:</span> een hoger eind-expiratoir longvolume verhoogt de plateaudruk en het risico op barotrauma.</li>
+              <li><span className="text-blue-300 font-semibold">Meten:</span> statische PEEPi meet je met een eind-expiratoire occlusie (expiratoire hold) bij een passieve patiënt. Bij spontane ademhaling is een slokdarmdrukmeting nodig.</li>
             </ul>
           </div>
         </section>
 
         {/* GEAVANCEERDE ONDERWERPEN */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Geavanceerde Onderwerpen: Heterogeniteit, Recruitment & Derecruitment</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Verdieping: heterogeniteit, VILI en stress-strain</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-purple-300 mb-2">Heterogene Ventilatie in ARDS</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              ARDS is niet homogeen: sommige lunggebieden hebben hoge compliance (gerecruit), andere lage (dichtgezet/atelectatisch).
-            </p>
+            <h3 className="text-base font-semibold text-purple-300 mb-2">Heterogene ventilatie bij ARDS</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-purple-300 font-semibold">Densiteit-distributieveranderingen:</span> CT-scans tonen gemengde patronen (consolidatie, ground-glass, normaal).</li>
-              <li><span className="text-purple-300 font-semibold">Gevolg voor mechanica:</span> als je hele long als één C behandelt, miss je lokale overdruk/onderdruk. Sommige eenheden krijgen hoog VT (stress), andere krijgen onvoldoende ventilatie (strain).</li>
-              <li><span className="text-purple-300 font-semibold">Recruitment-derecruitment cycle:</span> lage PEEP = derecruitment (alvéolen vallen in); hoge PEEP = recruitment maar ook overdistensie. Optimale PEEP is ongrijpbaar.</li>
+              <li><span className="text-purple-300 font-semibold">Kleine long (baby lung):</span> het beluchte deel van de long is klein. Een VT dat voor de hele long normaal lijkt, rekt het beluchte deel onevenredig op.</li>
+              <li><span className="text-purple-300 font-semibold">Gevolg voor de mechanica:</span> één gemiddelde C verbergt regionale verschillen. Sommige gebieden worden overrekt terwijl andere gecollabeerd blijven.</li>
+              <li><span className="text-purple-300 font-semibold">Recruitment en derecruitment:</span> een te lage PEEP laat alveoli cyclisch openen en sluiten; een te hoge PEEP overrekt de gezonde gebieden. Er is geen eenduidige optimale PEEP.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-purple-300 mb-2">Ventilator-Induced Lung Injury (VILI)</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              VILI is multi-mechanistische schade door ventilatie zelf.
-            </p>
+            <h3 className="text-base font-semibold text-purple-300 mb-2">Ventilatorgeïnduceerde longschade (VILI)</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-purple-300 font-semibold">Barotrauma:</span> absolute druk te hoog (Ppeak &gt; 30-35 cmH₂O).</li>
-              <li><span className="text-purple-300 font-semibold">Volutrauma (Overinflatie):</span> excessive stretch. Bijv. hoog VT in gezonde liep kan VILI veroorzaken.</li>
-              <li><span className="text-purple-300 font-semibold">Atelectotrauma:</span> cyclische opening-sluiting van aldéolen (hoge shear stress). Laag PEEP, snelle stijging van VT.</li>
-              <li><span className="text-purple-300 font-semibold">Biotrauma:</span> mechanische stress triggert inflammatie (cytokine release). Lokaal én systemisch.</li>
+              <li><span className="text-purple-300 font-semibold">Barotrauma:</span> luchtlekkage (pneumothorax, pneumomediastinum) door een hoge transpulmonale druk. Pplat en ΔP zijn hiervoor betere maten dan Ppeak, omdat Ppeak ook de drukval over de tube bevat.</li>
+              <li><span className="text-purple-300 font-semibold">Volutrauma:</span> schade door overrekking bij een te groot volume ten opzichte van de beschikbare (beluchte) long.</li>
+              <li><span className="text-purple-300 font-semibold">Atelectotrauma:</span> schuifkrachten door het cyclisch openen en sluiten van alveoli bij een onvoldoende PEEP.</li>
+              <li><span className="text-purple-300 font-semibold">Biotrauma:</span> mechanische belasting zet een ontstekingsreactie in gang, lokaal en systemisch.</li>
             </ul>
             <p className="text-sm text-gray-300 leading-7 mt-2">
-              <span className="text-yellow-300">Implicatie voor iASV:</span> driving pressure &lt;15 cmH₂O voorkomt de meeste VILI-vormen.
+              <span className="text-yellow-300">Betekenis voor de praktijk:</span> een lage driving pressure is geassocieerd met betere overleving<Ref n={9} />, maar een veilige drempel voor alle patiënten bestaat niet. Mechanisch vermogen combineert druk, volume en frequentie tot één maat; in een observationele analyse van ruim 8000 patiënten nam het risico op overlijden consistent toe boven ongeveer 17 J/min<Ref n={[10, 11]} />.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-purple-300 mb-2">Stress-Strain Concept</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              Recente inzichten (Preis et al., Chiumello et al.) benadrukken <span className="text-yellow-300">stress</span> (druk per eenheid) en <span className="text-yellow-300">strain</span> (volume-vergroting per eenheid).
-            </p>
+            <h3 className="text-base font-semibold text-purple-300 mb-2">Stress en strain</h3>
             <ul className="space-y-2 text-sm text-gray-300">
-              <li><span className="text-purple-300 font-semibold">Stress = ΔP (driving pressure):</span> niet absolute druk.</li>
-              <li><span className="text-purple-300 font-semibold">Strain = VT/FRC (functional residual capacity):</span> hoe veel vergroting relatief tot basale volume.</li>
-              <li><span className="text-purple-300 font-semibold">Veilige grenzen:</span> Stress &lt; 15 cmH₂O, Strain &lt; 1.0-1.5 (dus VT/FRC &lt; 1-1.5). Dit is meer conservatief dan oudere richtlijnen.</li>
+              <li><span className="text-purple-300 font-semibold">Stress:</span> de transpulmonale druk (luchtwegdruk min pleuradruk), de kracht per oppervlak op het longweefsel<Ref n={12} />.</li>
+              <li><span className="text-purple-300 font-semibold">Strain:</span> de volumetoename ten opzichte van het rustvolume, ΔV/FRC.</li>
+              <li><span className="text-purple-300 font-semibold">Verband:</span> stress ≈ specifieke longelastantie × strain; die elastantie was ongeveer 13 cmH₂O, vergelijkbaar bij gezonde longen en ARDS<Ref n={12} />. Omdat de verhouding tussen long- en systeemelastantie sterk wisselt (0.33–0.95), zijn Pplat en VT slechte maten voor stress en strain.</li>
+              <li><span className="text-purple-300 font-semibold">Drempel:</span> bij gezonde varkens ontstond longschade pas boven een strain van ongeveer 1.5–2<Ref n={13} />; vertaling naar mensen vraagt voorzichtigheid. Zonder FRC- of slokdarmdrukmeting zijn deze grootheden aan het bed niet beschikbaar.</li>
             </ul>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-purple-300 mb-2">Pendelluft (Penguin Effect): Ventilatie Tussen Longgebieden</h3>
-            <p className="text-sm text-gray-300 leading-7 mb-2">
-              In heterogene ARDS kunnen gebieden met verschillende τ gevolgen hebben:
+            <h3 className="text-base font-semibold text-purple-300 mb-2">Pendelluft</h3>
+            <p className="text-sm text-gray-300 leading-7">
+              Pendelluft is het verschuiven van lucht tussen longgebieden zonder dat het totale teugvolume verandert. Het ontstaat bij regionale verschillen in tijdconstante en vooral bij krachtige spontane inademing in een beschadigde long: de lokale onderdruk in de afhangende gebieden zuigt lucht uit niet-afhangende gebieden<Ref n={16} />. Dit kan regionale overrekking veroorzaken die aan de ventilator niet zichtbaar is.
             </p>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li>Eenheid A: τ kort → vult snel, leegt snel.</li>
-              <li>Eenheid B: τ lang → vult langzaam, leegt langzaam.</li>
-              <li><span className="text-yellow-300">Pendelluft:</span> tijdens het ademen stroomt lucht van A naar B (of vice versa). Dit veroorzaakt <span className="text-yellow-300">onefficiënte ventilatie</span> en <span className="text-yellow-300">extra weerstandskost</span>.</li>
-            </ul>
           </div>
         </section>
 
         {/* KLINISCHE ONDERBOUWING */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Klinische Onderbouwing: Onderzoeken die iASV's Principes Rechtvaardigen</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Klinische onderbouwing</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-orange-300 mb-2">ARDSnet LTV Trial (2000) — Landmark Study</h3>
+            <h3 className="text-base font-semibold text-orange-300 mb-2">ARDS Network (2000)</h3>
             <p className="text-sm text-gray-300 leading-7">
-              <span className="text-yellow-300">Bevinding:</span> 6 mL/kg IBW vs. 12 mL/kg reduceerde mortaliteit van 40% → 31% (p=0.007). Dit stelde vast dat "traditioneel" hoog VT schadelijk is. <span className="text-yellow-300">Implicatie voor iASV:</span> VT/kg ≤ 6-8 is niet onderhandelbaar.
+              <span className="text-yellow-300">Bevinding:</span> 6 mL/kg IBW met Pplat ≤ 30 cmH₂O tegenover 12 mL/kg verlaagde de mortaliteit van 39.8% naar 31.0%<Ref n={8} />. <span className="text-yellow-300">Betekenis:</span> een VT-grens op basis van IBW is de basis van longbeschermende beademing.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-orange-300 mb-2">Driving Pressure Studies (Amato et al., 2015)</h3>
+            <h3 className="text-base font-semibold text-orange-300 mb-2">Driving pressure (Amato et al., 2015)</h3>
             <p className="text-sm text-gray-300 leading-7">
-              <span className="text-yellow-300">Bevinding:</span> elke 1 cmH₂O stijging in ΔP was geassocieerd met ~5% toename in absolute mortality risk. ΔP was sterker predictor dan Ppeak of Pplat apart. <span className="text-yellow-300">Implicatie:</span> iASV's focus op ΔP &lt; 15 is evidence-based.
+              <span className="text-yellow-300">Bevinding:</span> in een heranalyse van negen gerandomiseerde studies was ΔP de ventilatorvariabele die het sterkst samenhing met overleving. Elke toename van één standaarddeviatie (ongeveer 7 cmH₂O) ging samen met een relatief risico op overlijden van 1.41<Ref n={9} />. <span className="text-yellow-300">Betekenis:</span> het gaat om een associatie; een prospectief bewezen streefwaarde ontbreekt.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-orange-300 mb-2">Frequency-Volume Trade-off Studies</h3>
+            <h3 className="text-base font-semibold text-orange-300 mb-2">Ademhalingspatroon onder ASV (Arnal et al., 2008)</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Onderzoeken (bijv. Naccache et al.) tonen aan dat in ARDS met compliance ↓, lagere frequenties (12-14 bpm) met wat hoger VT dikwijls minder WOB geven dan traditionele (16-20 bpm). <span className="text-yellow-300">Implicatie:</span> Otis' principe (lagere f_opt bij lage C) klopt klinisch.
+              <span className="text-yellow-300">Bevinding:</span> in een observationeel cohort van 243 patiënten koos ASV bij passieve patiënten met ALI/ARDS mediaan 18/min en 7.6 mL/kg, en bij COPD 13/min en 9.3 mL/kg<Ref n={6} />. Bij patiënten die zelf triggerden verschilde het patroon niet tussen de groepen. <span className="text-yellow-300">Betekenis:</span> de Otis-voorspelling is klinisch herkenbaar bij passieve patiënten. Let op: het VT bij COPD lag boven de 8 mL/kg-grens van deze simulator.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-orange-300 mb-2">Auto-PEEP in ARDS (verschillende cohorten)</h3>
+            <h3 className="text-base font-semibold text-orange-300 mb-2">IntelliVent-ASV (Arnal et al., 2012)</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Studies tonen dat PEEPi van 2-8 cmH₂O in sedated ARDS-patiënten niet ongewoon is, vooral bij hogere frequenties. <span className="text-yellow-300">Implicatie:</span> iASV's transparante tracking van PEEPi helpt deze verborgen druk zichtbaar te maken.
+              <span className="text-yellow-300">Bevinding:</span> in een gerandomiseerde cross-overstudie bij 50 gesedeerde IC-patiënten (twee periodes van 2 uur) was IntelliVent-ASV veilig. Minuutvolume, VT, plateaudruk (mediaan 24 naar 20 cmH₂O) en FiO₂ waren lager dan bij ASV, bij gelijke oxygenatie en een iets hogere PaCO₂<Ref n={7} />. <span className="text-yellow-300">Betekenis:</span> veelbelovend, maar grote studies naar harde uitkomsten zoals mortaliteit ontbreken.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-orange-300 mb-2">WOB Reducties via Optimale Frequentie (Fysiologische Studies)</h3>
+            <h3 className="text-base font-semibold text-orange-300 mb-2">Auto-PEEP bij longbeschermende beademing</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Esophageal pressure studies tonen aan dat WOB significant kan dalen (20-40%) door f_opt in plaats van "standaard" frequenties. <span className="text-yellow-300">Implicatie:</span> energetische efficiëntie (Otis/Mead) leidt tot concrete patiëntvoordelen.
+              <span className="text-yellow-300">Bevinding:</span> bij ARDS-patiënten volgens het ARDS Network-protocol ontstond door de hoge frequentie relevante intrinsieke PEEP<Ref n={15} />. <span className="text-yellow-300">Betekenis:</span> een hogere frequentie om V̇A te behouden is niet vrijblijvend. De ASV-regel f ≤ 20/τ beperkt dit risico.
             </p>
           </div>
         </section>
 
         {/* PARAMETERVARIATIE */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Parametervariatie: Hoe Patiëntfactoren iASV-Output Beïnvloeden</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Hoe patiëntfactoren het werkpunt verschuiven</h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">BMI en IBW</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">Lengte, gewicht en IBW</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>Obees (BMI &gt; 30): IBW ↓ relatief, dus VT/kg berekening is conservatiever.</li>
-                <li>Slanke patiënten: BMI laag, IBW bijna = werkelijk gewicht.</li>
-                <li>Gevolg: obese ARDS patiënten krijgen lager VT → lagere ΔP → neiging tot lagere f.</li>
+                <li>IBW hangt alleen af van lengte en geslacht; longgrootte schaalt met lengte, niet met gewicht.</li>
+                <li>Bij obesitas voorkomt VT op basis van IBW dat de long te veel volume krijgt.</li>
+                <li>De stijve thoraxwand verlaagt C en τ, waardoor f_opt stijgt. Pplat overschat dan de belasting van de long.</li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">PEEP en Recruitment</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">PEEP en recruitment</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>Hoge PEEP (15 cmH₂O): C kan stijgen (recruitment), maar PEEP_tot ↑ beperkt VT via ΔP.</li>
-                <li>Lage PEEP (5 cmH₂O): C ↓ (derecruitment), maar ruimte voor VT. Trade-off.</li>
-                <li>iASV recalculeert f_opt voor elke PEEP-instelling.</li>
+                <li>Recruitment verhoogt C: τ wordt langer, f_opt daalt licht en er is meer ruimte voor VT binnen de ΔP-grens.</li>
+                <li>Overrekking verlaagt C en verhoogt Pplat; de Pplat-grens wordt dan eerder bereikt.</li>
+                <li>PEEP komt niet in de Otis-vergelijking voor; ze werkt via de compliance en via de drukgrenzen. Bij iASV kan de SpO₂-regelkring PEEP zelf aanpassen.</li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">Sedatie/Musculaire Kracht</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">Sedatie en eigen ademactiviteit</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>Volledig sedated: patiënt transpireert niet. iASV moet alles aandrijven. W_el, W_res tellen op.</li>
-                <li>Licht sedated/awake: patiënt kan helpen. f_opt kan hoger, VT lager (patiënt doet mee).</li>
-                <li>iASV aan- vs. uit-bewustzijn aanpassingen kunnen voorkomen dat patiënt "tegen ventilator in"gaat.</li>
+                <li>Passieve patiënt: ASV levert drukgecontroleerde teugen met de doelfrequentie.</li>
+                <li>Actieve patiënt: spontane teugen worden drukondersteund. Ademt de patiënt boven de doelfrequentie, dan levert ASV geen verplichte teugen en stuurt ze alleen de drukondersteuning bij.</li>
+                <li>Krachtige eigen inspanning maakt de gemeten mechanica minder betrouwbaar en verhoogt de transpulmonale druk.</li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">Langweefselomslag (Healing vs. Progressive)</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">Beloop van ARDS</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>Eerste dagen ARDS: C zeer laag. f_opt laag, ΔP hoogsteeds beperkend.</li>
-                <li>Na 5-7 dagen: C stijgt (healing). f_opt stijgt, meer ruimte voor VT.</li>
-                <li>iASV's adaptiviteit is hier waardevol: automatisch aanpassen aan verbetering.</li>
+                <li>Vroege fase: C laag, τ kort, f_opt hoog en VT klein; ΔP en Pplat zijn meestal de beperkende grenzen.</li>
+                <li>Herstel: C stijgt, τ wordt langer, f_opt daalt en VT neemt toe binnen dezelfde grenzen.</li>
+                <li>ASV volgt die verandering per ademteug zonder dat de instellingen hoeven te worden aangepast.</li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">Positie & Gravitatie</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">Buikligging</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>Ruglig: C laag, V/Q mismatch groot → f_opt laag, f_actual kan hoger (druk-beperkt).</li>
-                <li>Buikligging: C stijgt ~15-25% → f_opt stijgt, VT kan iets omhoog.</li>
-                <li>Zijligging: tussenpositie.</li>
+                <li>Buikligging maakt de verdeling van ventilatie en stress homogener en verbetert vaak de oxygenatie.</li>
+                <li>Het effect op de systeemcompliance verschilt per patiënt; de thoraxwand wordt vaak stijver.</li>
+                <li>Een verandering in C werkt via τ door in f_opt, zoals hierboven beschreven.</li>
               </ul>
             </div>
 
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-              <h3 className="text-base font-semibold text-teal-300 mb-2">Comorbiditeiten</h3>
+              <h3 className="text-base font-semibold text-teal-300 mb-2">Comorbiditeit</h3>
               <ul className="space-y-1 text-sm text-gray-300">
-                <li>COPD + ARDS: R ↑↑, PEEPi ↑. f_opt ↓ sterk. Risico: auto-PEEP bouwt op.</li>
-                <li>Cardiogeen shock + ARDS: cardiac output ↓ → perfusie ↓ → VDalv ↑ → f_opt ↑.</li>
-                <li>Obesitas + ARDS: mechanica worse. C ↓, R ↑ (circuit). f_opt laag.</li>
+                <li>COPD met ARDS: hoge R en lage C hebben tegengestelde effecten op τ. Het netto effect bepaalt f_opt; let vooral op auto-PEEP.</li>
+                <li>Lage cardiac output of longembolie: de alveolaire dode ruimte stijgt. Er is meer minuutvolume nodig voor dezelfde PaCO₂.</li>
+                <li>Metabole acidose of koorts: hogere V̇A-behoefte, dus een hoger f_opt.</li>
               </ul>
             </div>
           </div>
@@ -612,88 +647,94 @@ export default function TheoryIASVPage() {
 
         {/* BEPERKINGEN */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Beperkingen & Edge Cases: Wanneer iASV Minder Geschikt Is</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Beperkingen en bijzondere situaties</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Ernstige Auto-PEEP-Situaties</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Ernstige luchtwegobstructie</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Bij zeer obstructieve patiënten (COPD exacerbatie, status asthmaticus) kan PEEPi 10-20 cmH₂O bereiken. <span className="text-yellow-300">Gevolg:</span> Otis-optimum kan onrealistisch zijn; de patiënt kan simpelweg niet "snel genoeg uitademen". iASV kan dit herkennen, maar het kernprobleem (luchtval) is niet oplosbaar met frequency/volume ajustment alleen—je hebt bronchodilatatie, medicatie, etc. nodig.
+              Bij een ernstige COPD-exacerbatie of astma-aanval kan PEEPi oplopen tot 10–20 cmH₂O. De regel f ≤ 20/τ beperkt de frequentie, maar het onderliggende probleem (expiratoire flowbeperking) los je niet op met frequentie en volume alleen. Bronchusverwijding, een lager minuutvolume (permissieve hypercapnie) en een lange expiratietijd blijven nodig.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Patiënten met Spontane Ademhaling (niet sedated, strong respiratory drive)</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Spontaan ademende patiënten</h3>
             <p className="text-sm text-gray-300 leading-7">
-              iASV is oorspronkelijk ontworpen voor gesedeerde, passief-geventileerde patiënten. Bij spontaan ademende patiënten kan de patiënt "trekken tegen het ventilator-algoritme". <span className="text-yellow-300">Gevolg:</span> meer sedatie nodig, of iASV moet in een andere assist-modus werken. Dit is nog onderzoeksgebied.
+              ASV is ontworpen voor passieve én actieve patiënten en wordt ook gebruikt bij het ontwennen. De Otis-berekening gaat echter uit van passieve mechanica. Bij een sterke ademdrive kunnen RCexp-metingen onbetrouwbaar zijn, en kan de transpulmonale druk hoog zijn terwijl de ventilatordrukken laag blijven.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Extreme Compliance (zeer laag of zeer hoog)</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Extreme compliance</h3>
             <p className="text-sm text-gray-300 leading-7">
-              <span className="text-yellow-300">Zeer laag (C &lt; 10 mL/cmH₂O):</span> f_opt zeer laag (&lt; 8 bpm). Bij V̇A = 4 L/min wordt VT ontzettend hoog. Kan buiten fysieke/medische grenzen gaan. <span className="text-yellow-300">Zeer hoog (C &gt; 150 mL/cmH₂O):</span> f_opt zeer hoog (&gt; 30 bpm). Patiënt ademt hyperventilatie of acidose. iASV volgt het optimum, maar klinisch moet je soms handmatig interfereren.
+              <span className="text-yellow-300">Zeer lage C (&lt; 15 mL/cmH₂O):</span> τ is zeer kort en f_opt hoog, maar zelfs een klein VT geeft al een hoge driving pressure. Vaak is er geen werkpunt dat aan alle grenzen voldoet; dan zijn permissieve hypercapnie of extracorporale ondersteuning aan de orde. <span className="text-yellow-300">Zeer hoge C (emfyseem):</span> τ is lang en f_opt laag, met een groot VT; de VT/kg-grens en f_max bepalen dan het werkpunt.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Heterogene ARDS met Lokale Collapse/Overdistensie</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Heterogene longen</h3>
             <p className="text-sm text-gray-300 leading-7">
-              iASV behandelt de long als één homogeen systeem. In werkelijkheid kunnen sommige gebieden collapsed zijn, anderen overdistended. <span className="text-yellow-300">Gevolg:</span> gemiddelde compliance geeft een vals optimum; enkele eenheden worden te veel belast. Remedie: recruitment manoeuvers (handmatig), individuele PEEP-titration, prone positioning—buiten iASV scope.
+              Het model behandelt de long als één compartiment. In werkelijkheid kunnen gebieden met korte en lange tijdconstanten naast elkaar bestaan, en kunnen gebieden gecollabeerd en overrekt zijn. Een gemiddelde τ geeft dan een gemiddeld optimum dat voor geen enkel gebied klopt. PEEP-titratie, recruitmentmanoeuvres en buikligging vallen buiten het ASV-algoritme.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Onnauwkeurige C/R-Metingen</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Onbetrouwbare metingen</h3>
             <p className="text-sm text-gray-300 leading-7">
-              iASV vertrouwt op nauwkeurige schatting van compliance en weerstand. Bij onzuivere occlusions, lekken, patient effort tijdens meting kan C/R foutief zijn. <span className="text-yellow-300">Gevolg:</span> f_opt wordt berekend op foute input. Oplossing: regelmatige hercalibratie, controle-metingen.
+              Lekkage (cuff, bronchopleurale fistel), eigen ademactiviteit tijdens de expiratie en een flowsensor met condens maken de schatting van RCexp onbetrouwbaar. Onverwacht hoge of lage waarden van R of C vragen eerst om controle van patiënt en circuit (verstopt filter, knik in de tube) voordat je de uitkomst van het algoritme vertrouwt.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Patiënten die Spontaan Herstellen (sterke spontane atemnooddrive)</h3>
+            <h3 className="text-base font-semibold text-red-300 mb-2">Dode ruimte en CO₂</h3>
             <p className="text-sm text-gray-300 leading-7">
-              Bij weaning kunnen patiënten zelf meer spontane ademarbeid willen leveren. iASV berekent een optimum op basis van mechanica, maar de eigen respons van de patiënt kan hiervan afwijken. Nodig: modus-switching naar PSV of andere spontane-breathingmodi.
-            </p>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-red-300 mb-2">Patiënten met Abnormale Meetwaarden</h3>
-            <p className="text-sm text-gray-300 leading-7">
-              <span className="text-yellow-300">Zeer hoge weerstand (R &gt; 40):</span> kan betekenen: obstructie-massief, fout in meting, of circuit-probleem (Filter verstopt). <span className="text-yellow-300">Zeer lage compliance (C &lt; 5):</span> kan echte ARDS zijn, maar ook: patiënt niet volledig sedated, thorax-stijfheid, etc. iASV moet "outliers" herkennen en klinicus waarschuwen.
+              ASV schat VD uit IBW. Bij een grote alveolaire dode ruimte (ARDS, longembolie) is de werkelijke V̇A lager dan berekend. Bij conventionele ASV moet de clinicus %MinVol dan op geleide van de bloedgas verhogen; iASV doet dat via PetCO₂. Een groot verschil tussen PaCO₂ en PetCO₂ maakt die regelkring minder nauwkeurig.
             </p>
           </div>
         </section>
 
-        {/* SAMENVATTINGS-REFLECTIE */}
+        {/* SLOTOPMERKINGEN */}
         <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-white">Slotopmerkingen: iASV in Perspectief</h2>
-          
+          <h2 className="text-xl font-semibold text-white">Slotopmerkingen</h2>
+
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-emerald-300 mb-2">Waarom deze Theorie Belangrijk is</h3>
+            <h3 className="text-base font-semibold text-emerald-300 mb-2">Waarom deze theorie ertoe doet</h3>
             <p className="text-sm text-gray-300 leading-7">
-              In moderne IC-zorg is handmatig ventilatormanagement te veel een "trial-and-error" proces. iASV plaatst klassieke fysiologie (Otis 1950, Mead jaren 1960) centraal en combineert het met moderne longbeschermende evidence. Dit maakt ventilatie meer <span className="text-yellow-300">principieel</span>, minder <span className="text-yellow-300">willekeurig</span>.
+              ASV plaatst klassieke fysiologie (Otis 1950, Mead 1960) centraal en combineert die met moderne longbescherming. Wie de onderliggende vergelijking begrijpt, kan de keuze van het toestel voorspellen en herkennen wanneer die keuze niet past bij de patiënt.
             </p>
           </div>
 
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-emerald-300 mb-2">De Toekomst: Adaptiviteit, Heterogeniteit, AI</h3>
-            <p className="text-sm text-gray-300 leading-7">
-              Volgende stap: <span className="text-yellow-300">regionale compliance/weerstand-schatting</span> (CT-gebaseerd of PEEP-sweep curves) zodat iASV ook heterogene ARDS kan aanpakken. <span className="text-yellow-300">Machine learning</span> kan patroon-herkenning verbeteren. Maar de onderliggende fysiologie (Otis/Mead) zal waarschijnlijk blijven gelden.
-            </p>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-            <h3 className="text-base font-semibold text-emerald-300 mb-2">Voor Klinische Praktijk</h3>
-            <p className="text-sm text-gray-300 leading-7">
-              <span className="text-yellow-300">Onthoud:</span>
-            </p>
+            <h3 className="text-base font-semibold text-emerald-300 mb-2">Voor de klinische praktijk</h3>
             <ol className="list-decimal pl-5 space-y-1 text-sm text-gray-300 mt-2">
-              <li>iASV is geen "set and forget". Regelmatig controleren (C, R, PEEPi, V̇A-behoefte).</li>
-              <li>Altijd de klinische waarnemingen tegen de nummers afwegen. Patiënt is leidraad.</li>
-              <li>Als iASV ongebruikelijk kiest (bijv. f_opt = 30 bpm), denk na: is meting goed? Klopt V̇A-behoefte?</li>
-              <li>iASV helpt, vervangt geen klinische oordeel.</li>
+              <li>ASV en iASV zijn geen &quot;instellen en vergeten&quot;: controleer regelmatig mechanica, auto-PEEP, bloedgas en het gekozen patroon.</li>
+              <li>Kiest het toestel een onverwacht patroon (bijvoorbeeld f 30/min bij een obstructieve patiënt), controleer dan eerst de metingen en het minuutvolumedoel.</li>
+              <li>De veiligheidsregels van het toestel vervangen geen longbeschermende doelen zoals Pplat en ΔP: meet ze zelf.</li>
+              <li>Het algoritme ondersteunt, maar vervangt het klinisch oordeel niet.</li>
             </ol>
           </div>
+        </section>
+
+        {/* BRONNEN */}
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-4">
+          <h2 className="text-xl font-semibold text-white">Bronnen</h2>
+          <ol className="space-y-2 text-xs md:text-sm text-gray-300 leading-6">
+            {references.map((r) => (
+              <li key={r.id} id={`ref-${r.id}`} className="flex gap-3 scroll-mt-20">
+                <span className="text-sky-400 font-mono shrink-0">[{r.id}]</span>
+                <span>
+                  {r.text}
+                  {r.doi && (
+                    <>
+                      {" "}
+                      <a href={`https://doi.org/${r.doi}`} className="text-sky-400 hover:underline break-all">
+                        doi:{r.doi}
+                      </a>
+                    </>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
         </section>
       </main>
     </div>
