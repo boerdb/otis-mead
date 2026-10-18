@@ -12,7 +12,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "any",
-    background_color: "#030712",
+    // Android-opstartscherm: dezelfde blauwe tint als het icoon.
+    background_color: "#1e6f9f",
     theme_color: "#030712",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

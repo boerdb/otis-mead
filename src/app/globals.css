@@ -160,3 +160,51 @@ input[type="range"]::-moz-range-thumb {
     border-bottom: 1px solid #d1d5db !important;
   }
 }
+
+/* Opstartscherm: alleen in de geïnstalleerde app (zie src/components/SplashOverlay.tsx) */
+.pwa-splash {
+  display: none;
+}
+@media (display-mode: standalone) {
+  .pwa-splash {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    color: #fff;
+    transition:
+      opacity 550ms ease,
+      transform 550ms ease;
+  }
+}
+.pwa-splash-out {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+.pwa-splash-logo {
+  position: absolute;
+  left: 50%;
+  /* --splash-shift: halve statusbalk, zodat het logo op de plek van het opstartbeeld staat */
+  top: calc(50% - var(--splash-shift, 0px));
+  filter: drop-shadow(0 8px 24px rgba(4, 25, 43, 0.35));
+}
+.pwa-splash-title {
+  position: absolute;
+  inset-inline: 0;
+  text-align: center;
+  animation: splash-title 600ms 200ms ease-out both;
+}
+@keyframes splash-title {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pwa-splash,
+  .pwa-splash-title {
+    transition: none;
+    animation: none;
+  }
+}

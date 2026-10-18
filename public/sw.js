@@ -1,5 +1,5 @@
 // Service worker voor de iASV-simulator: maakt de app installeerbaar en bruikbaar zonder verbinding.
-const CACHE = "otis-v1";
+const CACHE = "otis-v2";
 const SHELL = ["/", "/theorie-iasv", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {

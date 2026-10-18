@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import ViewportGuidance from "@/components/ViewportGuidance";
 import InstallPrompt from "@/components/InstallPrompt";
+import SplashOverlay from "@/components/SplashOverlay";
+import splashScreens from "@/lib/pwa/splash-screens.json";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -11,7 +13,13 @@ export const metadata: Metadata = {
   description:
     "Interactieve simulator voor Intelligent Adaptive Support Ventilation op basis van de Otis- en Mead-formules.",
   applicationName: "iASV Simulator",
-  appleWebApp: { capable: true, title: "iASV", statusBarStyle: "black" },
+  appleWebApp: {
+    capable: true,
+    title: "iASV",
+    statusBarStyle: "black",
+    // Opstartbeelden per iPhone/iPad (scripts/generate-splash.mjs).
+    startupImage: splashScreens.map(({ url, media }) => ({ url, media })),
+  },
 };
 
 export const viewport: Viewport = {
@@ -26,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="nl" className="dark">
       <body className={`${inter.className} bg-gray-950 text-gray-100 min-h-screen`}>
+        <SplashOverlay />
         <ViewportGuidance />
         <InstallPrompt />
         {children}
