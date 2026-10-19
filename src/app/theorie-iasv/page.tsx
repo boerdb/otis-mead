@@ -1,3 +1,4 @@
+import AppFooter from "@/components/AppFooter";
 import type { Metadata } from "next";
 import Link from "next/link";
 import PrintTheoryButton from "@/components/PrintTheoryButton";
@@ -740,6 +741,7 @@ export default function TheoryIASVPage() {
           </ol>
         </section>
       </main>
+      <AppFooter />
     </div>
   );
 }

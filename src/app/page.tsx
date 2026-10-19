@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { useVentStore } from "@/store/ventStore";
 import { calcIASV, calcLungProtection } from "@/lib/calculations";
 import Link from "next/link";
+import AppFooter from "@/components/AppFooter";
 
 export default function HomePage() {
   return (
@@ -69,11 +70,7 @@ export default function HomePage() {
         </aside>
       </main>
 
-      <footer className="border-t border-gray-800 py-4 text-center text-xs text-gray-600">
-        Educatieve simulator — niet voor klinisch gebruik
-        <span className="mx-2 text-gray-700">·</span>
-        © 2026 ClearVision, copyright houder
-      </footer>
+      <AppFooter />
     </div>
   );
 }
