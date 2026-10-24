@@ -1,7 +1,7 @@
 "use client";
 
 import { useVentStore } from "@/store/ventStore";
-import type { VentilatorParams } from "@/lib/types";
+import type { DoelModel, VentilatorParams } from "@/lib/types";
 import { RotateCcw } from "lucide-react";
 import { calcFrequencyWindow, calcTau } from "@/lib/calculations";
 
@@ -115,6 +115,11 @@ const SLIDER_GROUPS: { title: string; sliders: SliderDef[] }[] = [
   },
 ];
 
+const DOEL_OPTIES: { id: DoelModel; label: string; sub: string; title: string }[] = [
+  { id: "otis", label: "Otis (1950)", sub: "minste arbeid · klassiek ASV", title: "Doel = frequentie met de minste ademarbeid per minuut" },
+  { id: "mead", label: "Mead (1960)", sub: "minste kracht · richting ASV 1.1", title: "Doel = frequentie met de kleinste drukamplitude per teug" },
+];
+
 /** Voorbeeldpatiënten (70 kg IBW); zelfde waarden als de tabel op de theoriepagina. */
 const PRESETS: { label: string; title: string; params: Partial<VentilatorParams> }[] = [
   {
@@ -181,6 +186,39 @@ export default function ParameterPanel() {
             );
           })}
         </div>
+      </div>
+
+      {/* Doelcriterium */}
+      <div>
+        <p className="text-xs text-gray-500 mb-2">Doelcriterium</p>
+        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Doelcriterium">
+          {DOEL_OPTIES.map((o) => {
+            const active = (params.doelModel ?? "otis") === o.id;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setParam("doelModel", o.id)}
+                title={o.title}
+                className={`rounded-lg border px-2 py-2 text-left text-xs transition-colors ${
+                  active
+                    ? o.id === "mead"
+                      ? "border-fuchsia-500 bg-fuchsia-950/40 text-fuchsia-200"
+                      : "border-yellow-500 bg-yellow-950/30 text-yellow-200"
+                    : "border-gray-700 bg-gray-800 text-gray-300 hover:border-gray-500"
+                }`}
+              >
+                <span className="block font-semibold">{o.label}</span>
+                <span className="block text-[11px] text-gray-400">{o.sub}</span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-gray-500 leading-snug">
+          ASV 1.1 weegt beide criteria mee; Hamilton publiceert de weging niet. Beide optima staan altijd in de grafiek.
+        </p>
       </div>
 
       {/* Sliders */}

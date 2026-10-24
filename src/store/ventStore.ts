@@ -18,6 +18,7 @@ export const defaultParams: VentilatorParams = {
   pRamp:      50,
   peepiMeasured: 0,
   fSpont:     0,
+  doelModel:  "otis",
 };
 
 export const useVentStore = create<VentStore>((set) => ({

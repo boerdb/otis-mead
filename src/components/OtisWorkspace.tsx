@@ -17,6 +17,7 @@ import type { Coordinate } from "recharts";
 import { useVentStore } from "@/store/ventStore";
 import {
   calcOtis,
+  calcMead,
   calcIASV,
   generateVentilationHyperbola,
   generatePressureLimitLine,
@@ -128,6 +129,8 @@ export default function OtisWorkspace() {
   const [chartWidth, setChartWidth] = useState(0);
 
   const otis       = useMemo(() => calcOtis(params), [params]);
+  const mead       = useMemo(() => calcMead(params), [params]);
+  const meadDoel   = (params.doelModel ?? "otis") === "mead";
   const iasv       = useMemo(() => calcIASV(params), [params]);
   const hyperbola  = useMemo(() => generateVentilationHyperbola(params), [params]);
   const pLimitLine = useMemo(() => generatePressureLimitLine(params), [params]);
@@ -174,10 +177,10 @@ export default function OtisWorkspace() {
     <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-5">
       <div className="mb-3">
         <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
-          Otis Workspace — f · V<sub>T</sub> vlak
+          Otis–Mead workspace — f · V<sub>T</sub> vlak
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">
-          V̇A-hyperbool (cyaan) · Druklimieten (rood) · ◯ Otis-optimum (geel) · ● iASV-doel (groen)
+          V̇A-hyperbool (cyaan) · Druklimieten (rood) · ◯ Otis-optimum (geel) · ◌ Mead-optimum (magenta) · ● iASV-doel (groen)
           {showMinuteVolume && " · V̇E-hyperbool (blauw, gestippeld) · ◎ gemeten teug (blauw)"}
         </p>
       </div>
@@ -265,6 +268,17 @@ export default function OtisWorkspace() {
               strokeWidth={2}
               ifOverflow="visible"
             />
+            {/* Mead als gestippelde ring in magenta */}
+            <ReferenceDot
+              x={mead.fOptBpm}
+              y={mead.vtOpt}
+              r={8}
+              fill="none"
+              stroke="#e879f9"
+              strokeWidth={2}
+              strokeDasharray="3 2"
+              ifOverflow="visible"
+            />
             <ReferenceDot
               x={iasv.fActual}
               y={iasv.vtActual}
@@ -290,7 +304,7 @@ export default function OtisWorkspace() {
       </div>
 
       {/* Samenvatting */}
-      <div className={`grid grid-cols-1 gap-3 mt-4 ${showMinuteVolume ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+      <div className={`grid grid-cols-1 gap-3 mt-4 sm:grid-cols-2 ${showMinuteVolume ? "2xl:grid-cols-4" : "2xl:grid-cols-3"}`}>
         <SummaryBox
           label="◯ Otis-optimum"
           color="yellow"
@@ -302,7 +316,17 @@ export default function OtisWorkspace() {
           ]}
         />
         <SummaryBox
-          label="● iASV-doel"
+          label="◌ Mead-optimum"
+          color="magenta"
+          items={[
+            { k: "f",     v: `${mead.fOptBpm.toFixed(1)} bpm` },
+            { k: "VT",    v: `${(mead.vtOpt * 1000).toFixed(0)} mL` },
+            { k: "VT/kg", v: `${((mead.vtOpt * 1000) / params.ibw).toFixed(1)} mL/kg` },
+            { k: "ΔP",    v: `${(mead.vtOpt / mead.compliance).toFixed(1)} cmH₂O` },
+          ]}
+        />
+        <SummaryBox
+          label={meadDoel ? "● iASV-doel (Mead)" : "● iASV-doel (Otis)"}
           color={iasv.constrained ? "orange" : "green"}
           items={[
             { k: "f",  v: `${iasv.fActual.toFixed(1)} bpm` },
@@ -310,7 +334,7 @@ export default function OtisWorkspace() {
             { k: "V̇E", v: `${iasv.minuteVolume.toFixed(2)} L/min` },
             iasv.constrained
               ? { k: "⚠", v: iasv.limitingFactor }
-              : { k: "✓", v: "Otis-optimum veilig" },
+              : { k: "✓", v: meadDoel ? "Mead-optimum veilig" : "Otis-optimum veilig" },
           ]}
         />
         {showMinuteVolume && (
@@ -338,8 +362,9 @@ export default function OtisWorkspace() {
   );
 }
 
-type Color = "yellow" | "green" | "orange" | "blue";
+type Color = "yellow" | "green" | "orange" | "blue" | "magenta";
 const colorMap: Record<Color, string> = {
+  magenta: "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-300",
   blue:   "bg-sky-950/40 border-sky-800/40 text-sky-300",
   yellow: "bg-yellow-950/40 border-yellow-800/40 text-yellow-400",
   green:  "bg-green-950/40 border-green-800/40 text-green-400",

@@ -114,6 +114,12 @@ function FormulaCard() {
           accentClassName="text-yellow-400"
         />
         <Formula
+          title="Mead — Optimale frequentie"
+          formula="V̇A = VD·(2πτ)²·f³  ⇒  f = (V̇A/VD)^⅓·(2πτ)^−⅔"
+          note="Minimaliseert de drukamplitude (kracht) per teug; ASV 1.1 weegt dit mee naast Otis"
+          accentClassName="text-fuchsia-400"
+        />
+        <Formula
           title="Inspiratoire arbeid per adem"
           formula="W = VT²/(2C) + π²Rf·VT²/4 + PEEPi·VT"
           note="Elastisch + resistief + drempel (expiratie passief)"

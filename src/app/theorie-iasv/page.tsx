@@ -56,6 +56,35 @@ const otisRows = [
   },
 ];
 
+const meadRows = [
+  {
+    formula: "P(t) = V/C + R·V̇   ⇒   amplitude A = (VT/2) · √(E² + (2πf·R)²),   E = 1/C",
+    explain:
+      "Mead nam als kostfunctie niet de arbeid maar de kracht die de ademspieren per teug moeten leveren. Bij sinusoïdale flow is dat de amplitude van de druk: een elastisch deel (VT·E) en een resistief deel dat met de frequentie meegroeit.",
+  },
+  {
+    formula: "dA/df = 0 langs VT = V̇A/f + VD   ⇒   V̇A = VD · (2πτ)² · f³",
+    explain:
+      "Langs de V̇A-hyperbool differentiëren en nul stellen levert een exacte derdegraadsrelatie op, zonder benadering. Opnieuw bepalen alleen τ en V̇A/VD het optimum.",
+  },
+  {
+    formula: "f_Mead = (V̇A/VD)^⅓ · (2πτ)^−⅔",
+    explain:
+      "In Hz. Dezelfde vorm staat in de analyse van optimale targetingschema's van van der Staay en Chatburn. De tests van de simulator controleren met een rasterzoektocht dat dit het minimum van A is.",
+  },
+  {
+    formula: "VT_Mead = V̇A/f_Mead + VD",
+    explain:
+      "Omdat f_Mead hoger ligt dan f_Otis, is VT_Mead kleiner bij dezelfde alveolaire ventilatie: minder rek per teug, meer teugen per minuut.",
+  },
+];
+
+const meadScenarioRows = [
+  { name: "Gezonde longen", otis: "14.9 /min · 489 mL · ΔP 8.2 · Pinsp 13.7", mead: "23.4 /min · 367 mL · ΔP 6.1 · Pinsp 12.6", vermogen: "MP 9.7 → 10.5 · tidal 2.9 → 2.6 · WOB 4.7 → 5.1" },
+  { name: "ARDS", otis: "16.9 /min · 450 mL · ΔP 15.0 (grens) · Pinsp 25.6", mead: "28.4 /min · 330 mL · ΔP 11.0 · Pinsp 23.2", vermogen: "MP 18.8 → 21.0 · tidal 5.6 → 5.0 · WOB 8.4 → 9.5" },
+  { name: "COPD", otis: "12.3 /min · 560 mL (8 mL/kg begrenst)", mead: "12.3 /min · 560 mL (zelfde grens)", vermogen: "gelijk: de veiligheidsregels bepalen het werkpunt" },
+];
+
 const workRows = [
   {
     formula: "W_el = VT² / (2·C)",
@@ -113,6 +142,7 @@ const references: { id: number; text: string; doi?: string; url?: string }[] = [
   { id: 17, text: "Nuckton TJ, Alonso JA, Kallet RH, et al. Pulmonary dead-space fraction as a risk factor for death in the acute respiratory distress syndrome. N Engl J Med. 2002;346:1281–1286.", doi: "10.1056/NEJMoa012835" },
   { id: 18, text: "Karjaghli M, Saihi K. Adaptive support ventilation modes. Hamilton Medical Knowledge Base, 22 mei 2023 (fabrikantpublicatie).", url: "https://www.hamilton-medical.com/Article-page~knowledge-base~9d835360-2759-486f-9ea9-90861680059f~Adaptive-support-ventilation-modes~.html" },
   { id: 19, text: "Ceylan G, Topal S, Atakul G, et al. Randomized crossover trial to compare driving pressures in a closed-loop and a conventional mechanical ventilation mode in pediatric patients. Pediatr Pulmonol. 2021;56:3035–3043.", doi: "10.1002/ppul.25561" },
+  { id: 20, text: "van der Staay M, Chatburn RL. Advanced modes of mechanical ventilation and optimal targeting schemes. Intensive Care Med Exp. 2018;6:30.", doi: "10.1186/s40635-018-0195-0" },
 ];
 
 function Ref({ n }: { n: number | number[] }) {
@@ -166,7 +196,7 @@ export default function TheoryIASVPage() {
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <h3 className="text-base font-semibold text-sky-300 mb-2">Wat de simulator wel en niet doet</h3>
             <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300 leading-6">
-              <li>De simulator gebruikt een longmodel met één compartiment en lineaire R en C. Het doel (f_opt, VT_opt) volgt uit de Otis-vergelijking met sinusoïdale flow, zoals in het oorspronkelijke ASV. Huidige Hamilton-ventilatoren gebruiken standaard ASV 1.1, dat ook de Mead-vergelijking meeweegt; die versie mikt op een kleiner teugvolume, dus het werkpunt van het toestel kan iets lager VT en hoger f hebben dan de simulator toont.</li>
+              <li>De simulator gebruikt een longmodel met één compartiment en lineaire R en C. Het doel (f_opt, VT_opt) volgt naar keuze uit de Otis-vergelijking (minste arbeid, oorspronkelijk ASV) of uit de Mead-vergelijking (minste kracht per teug), beide met sinusoïdale flow. Huidige Hamilton-ventilatoren gebruiken standaard ASV 1.1, dat beide meeweegt; omdat Hamilton die weging niet publiceert, toont de simulator beide optima en kies je onder &quot;Doelcriterium&quot; welk doel het werkpunt volgt.</li>
               <li>De ademteug zelf wordt afgegeven zoals bij ASV: drukgecontroleerd met een instelbare drukstijgtijd (P-ramp, standaard 50 ms), I:E 1:2, een korte drukafname bij het openen van de expiratieklep en passieve expiratie. Het model is exact opgelost (exponentiële ingangen), niet benaderd. Pinsp, plateaudruk, auto-PEEP en mechanisch vermogen volgen uit dat model; auto-PEEP is dus een uitkomst van τ en de expiratietijd, geen invoer. Expiratoire flowbeperking (zoals bij COPD) zit niet in het lineaire model, waardoor auto-PEEP daar wordt onderschat. Daarom kun je een gemeten PEEPi (expiratoire hold) invoeren: ligt die boven de modelvoorspelling, dan rekent de simulator met de gemeten waarde en verhoogt het verschil de alveolaire basisdruk, Pplat en de benodigde Pinsp.</li>
               <li>Met &quot;eigen ademfrequentie&quot; simuleer je een actieve patiënt. Ademt die langzamer dan het doel, dan vult ASV aan met verplichte teugen en blijft het werkpunt op het doel. Ademt die sneller, dan zijn alle teugen spontaan en houdt ASV het minuutvolume vast: het gemeten punt schuift over de V̇E-hyperbool (VT = V̇E/f) en de alveolaire ventilatie daalt. De inspanning van de patiënt (Pmus) en de exacte regeling van de drukondersteuning worden niet gemodelleerd.</li>
               <li>Als invoer gebruikt de simulator de alveolaire ventilatie V̇A. ASV werkt met een doelminuutvolume, waaruit V̇A = V̇E − f·VD volgt. De PetCO₂- en SpO₂-regelkringen van iASV worden niet gesimuleerd.</li>
@@ -195,7 +225,7 @@ export default function TheoryIASVPage() {
                 Mead (Harvard School of Public Health) bouwde voort op dit model en stelde een ander optimalisatiecriterium voor: de ademhaling minimaliseert niet de arbeid maar de <span className="text-yellow-300">gemiddelde kracht</span> (drukamplitude) die de ademspieren moeten leveren<Ref n={2} />. Dat criterium sloot in zijn metingen beter aan bij de waargenomen frequenties, onder meer bij veranderde mechanica. Beide benaderingen voorspellen dezelfde richting: een kortere tijdconstante geeft een hogere optimale frequentie.
               </p>
               <p className="text-sm text-gray-300 leading-7 mt-2">
-                Het oorspronkelijke ASV (1994) was gebaseerd op de Otis-vergelijking<Ref n={4} />. In 2017 heeft Hamilton Medical het algoritme aangepast tot <span className="text-yellow-300">ASV 1.1</span>, nu de standaardinstelling op alle Hamilton-ventilatoren: naast de minste ademarbeid (Otis) wordt ook de laagste inspiratoire druk per teug (Mead) nagestreefd, met als doel een kleiner teugvolume en daarmee een lagere driving pressure<Ref n={[18, 19]} />. Een gerandomiseerde cross-overstudie bij 26 kinderen vond met ASV 1.1 een lagere driving pressure (mediaan 10.4 tegenover 12.4 cmH₂O) dan met conventionele drukgecontroleerde beademing<Ref n={19} />. Die gegevens komen deels uit fabrikantbronnen; onafhankelijk bewijs voor harde uitkomsten ontbreekt. De simulator rekent met Otis; de naam &quot;Otis-Mead&quot; verwijst naar beide fysiologische criteria.
+                Het oorspronkelijke ASV (1994) was gebaseerd op de Otis-vergelijking<Ref n={4} />. In 2017 heeft Hamilton Medical het algoritme aangepast tot <span className="text-yellow-300">ASV 1.1</span>, nu de standaardinstelling op alle Hamilton-ventilatoren: naast de minste ademarbeid (Otis) wordt ook de laagste inspiratoire druk per teug (Mead) nagestreefd, met als doel een kleiner teugvolume en daarmee een lagere driving pressure<Ref n={[18, 19]} />. Een gerandomiseerde cross-overstudie bij 26 kinderen vond met ASV 1.1 een lagere driving pressure (mediaan 10.4 tegenover 12.4 cmH₂O) dan met conventionele drukgecontroleerde beademing<Ref n={19} />. Die gegevens komen deels uit fabrikantbronnen; onafhankelijk bewijs voor harde uitkomsten ontbreekt. In de simulator kies je onder &quot;Doelcriterium&quot; of het werkpunt Otis of Mead volgt; beide optima staan altijd in de grafiek (zie de sectie over het Mead-optimum).
               </p>
             </div>
 
@@ -312,6 +342,80 @@ export default function TheoryIASVPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </section>
+
+        {/* MEAD SECTIE */}
+        <section className="iasv-print-section bg-gray-900 border border-gray-700 rounded-2xl p-4 sm:p-6 space-y-4">
+          <h2 className="text-xl font-semibold text-white">Het Mead-optimum: minste kracht per teug</h2>
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-fuchsia-300 mb-2">Een ander criterium</h3>
+            <p className="text-sm text-gray-300 leading-7">
+              Otis zoekt de frequentie met de minste <span className="text-yellow-300">arbeid per minuut</span>. Mead toonde dat de spontane frequentie van mensen en proefdieren beter past bij de frequentie met de minste <span className="text-fuchsia-300">gemiddelde kracht per teug</span><Ref n={2} />. Dat verschil is klinisch relevant: de kracht per teug hangt direct samen met de drukzwaai en dus met de driving pressure. Hamilton noemt dit criterium als basis van de aanpassing in ASV 1.1<Ref n={18} />.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {meadRows.map((item) => (
+              <div key={item.formula} className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                <p className="text-xs md:text-sm font-mono text-fuchsia-300 wrap-break-word mb-1">{item.formula}</p>
+                <p className="text-sm text-gray-300 leading-6">
+                  {item.explain}
+                  {item.formula.startsWith("f_Mead") && <Ref n={20} />}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-fuchsia-300 mb-2">Otis en Mead naast elkaar</h3>
+            <p className="text-xs text-gray-400 mb-2">
+              iASV-werkpunt in de simulator met elk criterium als doel; zelfde scenario&apos;s als hierboven (V̇A 5 L/min, IBW 70 kg). Vermogens in J/min: MP volgens Gattinoni (inclusief PEEP), tidal power = 0.098·f·VT²/(2C), WOB = Otis-arbeid.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="min-w-[640px] w-full text-xs md:text-sm">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="py-2 pr-3 font-semibold">Scenario</th>
+                    <th className="py-2 px-3 font-semibold text-yellow-300">Doel Otis</th>
+                    <th className="py-2 px-3 font-semibold text-fuchsia-300">Doel Mead</th>
+                    <th className="py-2 pl-3 font-semibold">Vermogen Otis → Mead</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {meadScenarioRows.map((row) => (
+                    <tr key={row.name} className="border-b border-gray-800 align-top">
+                      <td className="py-2 pr-3 text-gray-200">{row.name}</td>
+                      <td className="py-2 px-3 text-yellow-300 font-mono text-xs">{row.otis}</td>
+                      <td className="py-2 px-3 text-fuchsia-300 font-mono text-xs">{row.mead}</td>
+                      <td className="py-2 pl-3 text-gray-300 font-mono text-xs">{row.vermogen}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+            <h3 className="text-base font-semibold text-fuchsia-300 mb-2">Wat dit laat zien</h3>
+            <ul className="space-y-2 text-sm text-gray-300 leading-7">
+              <li>
+                <span className="text-fuchsia-300">Kleiner VT, hogere f:</span> in deze scenario&apos;s ligt f_Mead steeds hoger dan f_Otis. Bij ARDS daalt de driving pressure van de grens (15) naar 11 cmH₂O; daar zit de winst die Hamilton voor ASV 1.1 noemt.
+              </li>
+              <li>
+                <span className="text-fuchsia-300">Vermogen hangt af van de definitie:</span> het tidal power (zonder PEEP-term) daalt met Mead, maar het mechanisch vermogen volgens Gattinoni stijgt licht, omdat de PEEP-energie met elke extra teug meetelt. Hamilton noemt een lager mechanisch vermogen voor ASV 1.1<Ref n={18} />; in dit eenvoudige model geldt dat alleen voor het tidal power.
+              </li>
+              <li>
+                <span className="text-fuchsia-300">Meer arbeid en meer dode-ruimteventilatie:</span> Mead ligt per definitie niet op het arbeidsminimum, en een groter deel van elke teug is dode ruimte. Bij een spontaan ademende patiënt kost dat ademarbeid.
+              </li>
+              <li>
+                <span className="text-fuchsia-300">Bij obstructie bepalen de regels:</span> bij COPD liggen beide optima buiten het veilige venster en kiezen beide criteria hetzelfde werkpunt.
+              </li>
+              <li>
+                <span className="text-fuchsia-300">ASV 1.1 is geen zuivere Mead:</span> het toestel weegt beide criteria mee, en Hamilton publiceert die weging niet. Het werkelijke doel ligt dus niet per se op een van de twee punten; de simulator laat de bandbreedte zien.
+              </li>
+            </ul>
           </div>
         </section>
 

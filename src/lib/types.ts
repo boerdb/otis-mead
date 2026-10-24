@@ -19,7 +19,14 @@ export interface VentilatorParams {
   peepiMeasured: number;
   /** Eigen ademfrequentie van de patiënt (/min); 0 = passief */
   fSpont: number;
+  /**
+   * Criterium voor het doel: "otis" = minste arbeid (oorspronkelijk ASV),
+   * "mead" = minste drukamplitude per teug (richting ASV 1.1). Standaard "otis".
+   */
+  doelModel?: DoelModel;
 }
+
+export type DoelModel = "otis" | "mead";
 
 // ─── Resultaattypen ────────────────────────────────────────────────────────────
 
@@ -110,10 +117,16 @@ export interface ProtectionScore {
 }
 
 export interface iASVDecision {
+  /** Gebruikt criterium voor het doel */
+  doelModel: DoelModel;
   /** Otis-optimum f (bpm) */
   fOtis: number;
   /** Otis-optimum VT (L) */
   vtOtis: number;
+  /** Mead-optimum f (bpm) */
+  fMead: number;
+  /** Mead-optimum VT (L) */
+  vtMead: number;
   /** Werkelijk toegepaste f na limieten (bpm) */
   fActual: number;
   /** Werkelijk toegepaste VT na limieten (L) */

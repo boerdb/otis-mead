@@ -6,7 +6,9 @@ import {
   calcDeadSpace,
   calcFrequencyWindow,
   calcIASV,
+  calcForceAmplitude,
   calcLungProtection,
+  calcMead,
   calcOtis,
   calcProtectionScores,
   calcTau,
@@ -466,5 +468,82 @@ describe("spontane ademhaling", () => {
     expect(d.measured.alveolarVentilation).toBeLessThan(base.vaTarget);
     // Het doel zelf verandert niet door de eigen ademactiviteit
     expect(d.fActual).toBeCloseTo(calcIASV(base).fActual, 12);
+  });
+});
+
+describe("Mead-optimum (minste drukamplitude)", () => {
+  it("geeft bij τ 0,5 s, V̇A 5 L/min en VD 154 mL ≈ 22,8/min en 373 mL", () => {
+    const m = calcMead(base);
+    expect(m.tau).toBeCloseTo(0.5, 12);
+    expect(m.fOptBpm).toBeCloseTo(22.79, 1);
+    expect(m.vtOpt * 1000).toBeCloseTo(373.3, 0);
+  });
+
+  it("voldoet aan V̇A = VD · (2πτ)² · f³", () => {
+    for (const p of [base, { ...base, compliance: 30, resistance: 12 }, { ...base, compliance: 60, resistance: 25 }]) {
+      const m = calcMead(p);
+      const va = p.vaTarget / 60;
+      expect(m.vd * (2 * Math.PI * m.tau) ** 2 * m.fOptHz ** 3).toBeCloseTo(va, 10);
+    }
+  });
+
+  it("is het minimum van de drukamplitude langs de V̇A-hyperbool", () => {
+    for (const p of [base, { ...base, compliance: 30, resistance: 12 }, { ...base, compliance: 60, resistance: 25 }]) {
+      const m = calcMead(p);
+      const va = p.vaTarget / 60;
+      const amp = (fHz: number) => calcForceAmplitude(p, fHz, va / fHz + m.vd);
+      let bestF = 0;
+      let best = Infinity;
+      for (let fBpm = 3; fBpm <= 80; fBpm += 0.01) {
+        const a = amp(fBpm / 60);
+        if (a < best) { best = a; bestF = fBpm; }
+      }
+      expect(bestF).toBeCloseTo(m.fOptBpm, 1);
+      expect(amp(m.fOptHz)).toBeLessThanOrEqual(amp(calcOtis(p).fOptHz) + 1e-12);
+    }
+  });
+
+  it("kiest bij normaal, ARDS en COPD een kleiner VT en hogere f dan Otis", () => {
+    for (const p of [
+      { ...base, compliance: 60, resistance: 8 },
+      { ...base, compliance: 30, resistance: 12, peep: 10 },
+      { ...base, compliance: 60, resistance: 25 },
+    ]) {
+      const m = calcMead(p);
+      const o = calcOtis(p);
+      expect(m.vtOpt).toBeLessThan(o.vtOpt);
+      expect(m.fOptBpm).toBeGreaterThan(o.fOptBpm);
+    }
+  });
+});
+
+describe("doelmodel van het iASV-werkpunt", () => {
+  it("gebruikt standaard Otis (ongewijzigd gedrag)", () => {
+    const d = calcIASV(base);
+    expect(d.doelModel).toBe("otis");
+    expect(d.fActual).toBeCloseTo(calcOtis(base).fOptBpm, 6);
+  });
+
+  it("gebruikt met doelModel mead het Mead-optimum als dat binnen de grenzen ligt", () => {
+    const d = calcIASV({ ...base, doelModel: "mead" });
+    expect(d.doelModel).toBe("mead");
+    expect(d.constrained).toBe(false);
+    expect(d.fActual).toBeCloseTo(d.fMead, 6);
+    expect(d.vtActual).toBeCloseTo(d.vtMead, 9);
+    expect(d.limitingFactor).toContain("Mead");
+  });
+
+  it("begrenst het Mead-doel ook door de ASV-regels (COPD: f ≤ 20/τ)", () => {
+    const p = { ...base, compliance: 60, resistance: 25, doelModel: "mead" as const };
+    const d = calcIASV(p);
+    expect(d.fActual).toBeLessThanOrEqual(d.fMaxBpm + 1e-6);
+    expect(d.vtActual).toBeGreaterThanOrEqual(d.vtMin - 1e-9);
+  });
+
+  it("rapporteert altijd beide optima, ongeacht het doelmodel", () => {
+    const o = calcIASV(base);
+    const m = calcIASV({ ...base, doelModel: "mead" });
+    expect(o.fMead).toBeCloseTo(m.fMead, 12);
+    expect(o.fOtis).toBeCloseTo(m.fOtis, 12);
   });
 });

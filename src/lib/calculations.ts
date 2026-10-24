@@ -10,7 +10,11 @@
  *    Intensive Care Med 42:1567–1575
  *
  * Model: één-compartiment long met lineaire R en C.
- *  - Het doel (f, VT) volgt uit de Otis-vergelijking (sinusoïdale flow, zoals in het oorspronkelijke ASV; ASV 1.1 weegt ook Mead mee).
+ *  - Het doel (f, VT) volgt uit de Otis-vergelijking (minste arbeid; oorspronkelijk ASV) of,
+ *    naar keuze, uit de Mead-vergelijking (minste drukamplitude per teug). ASV 1.1 (2017) weegt
+ *    beide mee; Hamilton publiceert die weging niet, dus de simulator toont beide optima.
+ *  - Mead-vorm: van der Staay M, Chatburn RL (2018) "Advanced modes of mechanical ventilation and optimal
+ *    targeting schemes" Intensive Care Med Exp 6:30, doi:10.1186/s40635-018-0195-0
  *  - De ademteug wordt drukgecontroleerd afgegeven zoals bij ASV: blokvormige
  *    inspiratiedruk, I:E = 1:2, passieve exponentiële expiratie, in stationaire toestand.
  *    Onvolledige expiratie levert dynamische auto-PEEP op.
@@ -96,6 +100,34 @@ export function calcOtis(params: VentilatorParams): OtisResult {
   const vtOpt = VA_s / fHz + vd; // VT = V̇A/f + VD
 
   return { fOptHz: fHz, fOptBpm: fBpm, vtOpt, vd, compliance: C, tau };
+}
+
+// ─── Mead-formule ─────────────────────────────────────────────────────────────
+
+/**
+ * Mead (1960): de frequentie waarbij de gemiddelde kracht (drukamplitude) per teug
+ * minimaal is bij constante V̇A. Bij sinusoïdale flow is de amplitude van
+ * P = V/C + R·V̇ gelijk aan (VT/2)·√(E² + (2πfR)²). Langs VT = V̇A/f + VD differentiëren
+ * en nul stellen geeft exact (geen benadering):
+ *
+ *   V̇A = VD · (2πτ)² · f³   ⇒   f = (V̇A/VD)^(1/3) · (2πτ)^(−2/3)   [Hz]
+ */
+export function calcMead(params: VentilatorParams): OtisResult {
+  const C = calcCompliance(params);
+  const vd = calcDeadSpace(params);
+  const tau = calcTau(params);
+  const VA_s = params.vaTarget / 60; // L/s
+
+  const fHz = Math.cbrt(VA_s / vd) * Math.pow(2 * Math.PI * tau, -2 / 3);
+  const vtOpt = VA_s / fHz + vd;
+
+  return { fOptHz: fHz, fOptBpm: fHz * 60, vtOpt, vd, compliance: C, tau };
+}
+
+/** Drukamplitude per teug bij sinusoïdale flow (cmH₂O): (VT/2)·√(E² + (2πfR)²). Meads kostfunctie. */
+export function calcForceAmplitude(params: VentilatorParams, fHz: number, vt: number): number {
+  const E = 1 / calcCompliance(params);
+  return (vt / 2) * Math.hypot(E, 2 * Math.PI * fHz * params.resistance);
 }
 
 // ─── WOB-berekening (Otis sinusoïdaal profiel) ───────────────────────────────
@@ -340,7 +372,7 @@ function buildConstraints(params: VentilatorParams): Constraint[] {
 
 /**
  * Simuleert de iASV-keuze in het Otis-model:
- *  1. Bereken het Otis-optimum (f, VT) op de V̇A-hyperbool
+ *  1. Bereken het doel (Otis- of Mead-optimum) op de V̇A-hyperbool
  *  2. Bepaal welke punten op de hyperbool aan alle limieten voldoen
  *  3. Kies het toegestane punt met f het dichtst bij f_Otis (V̇A blijft gelijk)
  *  4. Rapporteer welke limiet de verschuiving veroorzaakt
@@ -350,6 +382,10 @@ function buildConstraints(params: VentilatorParams): Constraint[] {
  */
 export function calcIASV(params: VentilatorParams): iASVDecision {
   const otis      = calcOtis(params);
+  const mead      = calcMead(params);
+  const doelModel = params.doelModel ?? "otis";
+  const doel      = doelModel === "mead" ? mead : otis;
+  const doelNaam  = doelModel === "mead" ? "Mead-optimum" : "Otis-optimum";
   const vd        = otis.vd;
   const VA_s      = params.vaTarget / 60;
   const { fMinBpm, fMaxBpm } = calcFrequencyWindow(params);
@@ -363,10 +399,10 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
   };
   const feasibleAt = (fBpm: number) => failing(fBpm).length === 0;
 
-  const fOtis = otis.fOptBpm;
+  const fOtis = doel.fOptBpm; // doel van het gekozen criterium (Otis of Mead)
   let fChosen = fOtis;
   let feasible = true;
-  let limitingFactor = "Geen — Otis-optimum";
+  let limitingFactor = `Geen — ${doelNaam}`;
 
   if (!feasibleAt(fOtis)) {
     // Fijn raster binnen het ASV-frequentievenster, daarna bisectie op de grens.
@@ -424,8 +460,11 @@ export function calcIASV(params: VentilatorParams): iASVDecision {
   const protScore = scores.reduce((sum, x) => sum + x.score, 0) / scores.length;
 
   return {
+    doelModel,
     fOtis:           otis.fOptBpm,
     vtOtis:          otis.vtOpt,
+    fMead:           mead.fOptBpm,
+    vtMead:          mead.vtOpt,
     fActual:         fChosen,
     vtActual,
     constrained,
