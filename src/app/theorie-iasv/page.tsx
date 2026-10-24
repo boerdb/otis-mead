@@ -47,7 +47,7 @@ const otisRows = [
   {
     formula: "f_opt = ( √(1 + 2a·τ·V̇A/VD) − 1 ) / (a·τ),   a = 2π²",
     explain:
-      "De positieve wortel, in Hz. Dit is de vorm die in ASV wordt gebruikt; de constante a hangt af van het veronderstelde flowprofiel (2π² voor sinusoïdale flow).",
+      "De positieve wortel, in Hz. Dit is de vorm waarop het oorspronkelijke ASV is gebaseerd; sinds ASV 1.1 (2017) weegt het algoritme daarnaast de Mead-vergelijking mee (zie Historische achtergrond). De constante a hangt af van het veronderstelde flowprofiel (2π² voor sinusoïdale flow).",
   },
   {
     formula: "VT_opt = V̇A/f_opt + VD",
@@ -88,12 +88,12 @@ const scenarioRows = [
 const iasvSteps = [
   "Meet de longmechanica (RCexp, compliance, weerstand) per ademteug.",
   "Bepaal het doelminuutvolume: %MinVol × 0.1 L/kg IBW/min (volwassene). Bij IntelliVent-ASV past de regelkring op PetCO₂ dit percentage automatisch aan.",
-  "Bereken met de Otis-vergelijking de doelfrequentie en het bijbehorende doel-VT.",
+  "Bereken de doelfrequentie en het bijbehorende doel-VT: in het oorspronkelijke ASV met de Otis-vergelijking (minste arbeid), sinds ASV 1.1 aangevuld met de Mead-vergelijking (minste kracht per teug).",
   "Leg het doel binnen het veiligheidsvenster: minimale en maximale frequentie, minimaal VT en de drukgrens.",
   "Lever drukgecontroleerde (passieve patiënt) of drukondersteunde (actieve patiënt) ademteugen en pas de inspiratiedruk per ademteug aan tot het doel-VT is bereikt.",
 ];
 
-const references: { id: number; text: string; doi?: string }[] = [
+const references: { id: number; text: string; doi?: string; url?: string }[] = [
   { id: 1, text: "Otis AB, Fenn WO, Rahn H. Mechanics of breathing in man. J Appl Physiol. 1950;2:592–607.", doi: "10.1152/jappl.1950.2.11.592" },
   { id: 2, text: "Mead J. Control of respiratory frequency. J Appl Physiol. 1960;15:325–336." },
   { id: 3, text: "Radford EP. Ventilation standards for use in artificial respiration. J Appl Physiol. 1955;7:451–460.", doi: "10.1152/jappl.1955.7.4.451" },
@@ -111,6 +111,8 @@ const references: { id: number; text: string; doi?: string }[] = [
   { id: 15, text: "de Durante G, del Turco M, Rustichini L, et al. ARDSNet lower tidal volume ventilatory strategy may generate intrinsic positive end-expiratory pressure in patients with acute respiratory distress syndrome. Am J Respir Crit Care Med. 2002;165:1271–1274.", doi: "10.1164/rccm.2105050" },
   { id: 16, text: "Yoshida T, Torsani V, Gomes S, et al. Spontaneous effort causes occult pendelluft during mechanical ventilation. Am J Respir Crit Care Med. 2013;188:1420–1427.", doi: "10.1164/rccm.201303-0539OC" },
   { id: 17, text: "Nuckton TJ, Alonso JA, Kallet RH, et al. Pulmonary dead-space fraction as a risk factor for death in the acute respiratory distress syndrome. N Engl J Med. 2002;346:1281–1286.", doi: "10.1056/NEJMoa012835" },
+  { id: 18, text: "Karjaghli M, Saihi K. Adaptive support ventilation modes. Hamilton Medical Knowledge Base, 22 mei 2023 (fabrikantpublicatie).", url: "https://www.hamilton-medical.com/Article-page~knowledge-base~9d835360-2759-486f-9ea9-90861680059f~Adaptive-support-ventilation-modes~.html" },
+  { id: 19, text: "Ceylan G, Topal S, Atakul G, et al. Randomized crossover trial to compare driving pressures in a closed-loop and a conventional mechanical ventilation mode in pediatric patients. Pediatr Pulmonol. 2021;56:3035–3043.", doi: "10.1002/ppul.25561" },
 ];
 
 function Ref({ n }: { n: number | number[] }) {
@@ -164,7 +166,7 @@ export default function TheoryIASVPage() {
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <h3 className="text-base font-semibold text-sky-300 mb-2">Wat de simulator wel en niet doet</h3>
             <ul className="list-disc pl-5 space-y-1 text-sm text-gray-300 leading-6">
-              <li>De simulator gebruikt een longmodel met één compartiment en lineaire R en C. Het doel (f_opt, VT_opt) volgt uit de Otis-vergelijking met sinusoïdale flow, zoals in ASV.</li>
+              <li>De simulator gebruikt een longmodel met één compartiment en lineaire R en C. Het doel (f_opt, VT_opt) volgt uit de Otis-vergelijking met sinusoïdale flow, zoals in het oorspronkelijke ASV. Huidige Hamilton-ventilatoren gebruiken standaard ASV 1.1, dat ook de Mead-vergelijking meeweegt; die versie mikt op een kleiner teugvolume, dus het werkpunt van het toestel kan iets lager VT en hoger f hebben dan de simulator toont.</li>
               <li>De ademteug zelf wordt afgegeven zoals bij ASV: drukgecontroleerd met een instelbare drukstijgtijd (P-ramp, standaard 50 ms), I:E 1:2, een korte drukafname bij het openen van de expiratieklep en passieve expiratie. Het model is exact opgelost (exponentiële ingangen), niet benaderd. Pinsp, plateaudruk, auto-PEEP en mechanisch vermogen volgen uit dat model; auto-PEEP is dus een uitkomst van τ en de expiratietijd, geen invoer. Expiratoire flowbeperking (zoals bij COPD) zit niet in het lineaire model, waardoor auto-PEEP daar wordt onderschat. Daarom kun je een gemeten PEEPi (expiratoire hold) invoeren: ligt die boven de modelvoorspelling, dan rekent de simulator met de gemeten waarde en verhoogt het verschil de alveolaire basisdruk, Pplat en de benodigde Pinsp.</li>
               <li>Met &quot;eigen ademfrequentie&quot; simuleer je een actieve patiënt. Ademt die langzamer dan het doel, dan vult ASV aan met verplichte teugen en blijft het werkpunt op het doel. Ademt die sneller, dan zijn alle teugen spontaan en houdt ASV het minuutvolume vast: het gemeten punt schuift over de V̇E-hyperbool (VT = V̇E/f) en de alveolaire ventilatie daalt. De inspanning van de patiënt (Pmus) en de exacte regeling van de drukondersteuning worden niet gemodelleerd.</li>
               <li>Als invoer gebruikt de simulator de alveolaire ventilatie V̇A. ASV werkt met een doelminuutvolume, waaruit V̇A = V̇E − f·VD volgt. De PetCO₂- en SpO₂-regelkringen van iASV worden niet gesimuleerd.</li>
@@ -193,7 +195,7 @@ export default function TheoryIASVPage() {
                 Mead (Harvard School of Public Health) bouwde voort op dit model en stelde een ander optimalisatiecriterium voor: de ademhaling minimaliseert niet de arbeid maar de <span className="text-yellow-300">gemiddelde kracht</span> (drukamplitude) die de ademspieren moeten leveren<Ref n={2} />. Dat criterium sloot in zijn metingen beter aan bij de waargenomen frequenties, onder meer bij veranderde mechanica. Beide benaderingen voorspellen dezelfde richting: een kortere tijdconstante geeft een hogere optimale frequentie.
               </p>
               <p className="text-sm text-gray-300 leading-7 mt-2">
-                ASV gebruikt de Otis-vergelijking; de naam &quot;Otis-Mead&quot; in deze simulator verwijst naar deze gezamenlijke fysiologische basis.
+                Het oorspronkelijke ASV (1994) was gebaseerd op de Otis-vergelijking<Ref n={4} />. In 2017 heeft Hamilton Medical het algoritme aangepast tot <span className="text-yellow-300">ASV 1.1</span>, nu de standaardinstelling op alle Hamilton-ventilatoren: naast de minste ademarbeid (Otis) wordt ook de laagste inspiratoire druk per teug (Mead) nagestreefd, met als doel een kleiner teugvolume en daarmee een lagere driving pressure<Ref n={[18, 19]} />. Een gerandomiseerde cross-overstudie bij 26 kinderen vond met ASV 1.1 een lagere driving pressure (mediaan 10.4 tegenover 12.4 cmH₂O) dan met conventionele drukgecontroleerde beademing<Ref n={19} />. Die gegevens komen deels uit fabrikantbronnen; onafhankelijk bewijs voor harde uitkomsten ontbreekt. De simulator rekent met Otis; de naam &quot;Otis-Mead&quot; verwijst naar beide fysiologische criteria.
               </p>
             </div>
 
@@ -732,6 +734,14 @@ export default function TheoryIASVPage() {
                       {" "}
                       <a href={`https://doi.org/${r.doi}`} className="text-sky-400 hover:underline break-all">
                         doi:{r.doi}
+                      </a>
+                    </>
+                  )}
+                  {r.url && (
+                    <>
+                      {" "}
+                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline break-all">
+                        hamilton-medical.com
                       </a>
                     </>
                   )}

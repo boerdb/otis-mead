@@ -10,7 +10,7 @@
  *    Intensive Care Med 42:1567–1575
  *
  * Model: één-compartiment long met lineaire R en C.
- *  - Het doel (f, VT) volgt uit de Otis-vergelijking (sinusoïdale flow, zoals in ASV).
+ *  - Het doel (f, VT) volgt uit de Otis-vergelijking (sinusoïdale flow, zoals in het oorspronkelijke ASV; ASV 1.1 weegt ook Mead mee).
  *  - De ademteug wordt drukgecontroleerd afgegeven zoals bij ASV: blokvormige
  *    inspiratiedruk, I:E = 1:2, passieve exponentiële expiratie, in stationaire toestand.
  *    Onvolledige expiratie levert dynamische auto-PEEP op.
