@@ -8,7 +8,7 @@ import time
 
 import paramiko
 
-HOST = os.environ.get("DEPLOY_HOST", "192.168.1.32")
+HOST = os.environ.get("DEPLOY_HOST", "85.10.144.42")
 USER = os.environ.get("DEPLOY_USER", "root")
 # Inloggen met de SSH-sleutel, niet met een wachtwoord (zelfde als brotherdruk).
 SSH_KEY_PATH = os.path.expanduser(os.environ.get("SSH_KEY_PATH", "~/.ssh/id_ed25519_homelab"))
